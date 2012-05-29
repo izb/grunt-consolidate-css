@@ -22,7 +22,7 @@ var grunt = require('grunt'),
     test.ifError(value)
 */
 
-exports['consolidateCss'] = {
+exports['consolidatecss'] = {
   setUp: function(done) {
     // setup here
     path.exists('tmp/min.css', function(exists) {
@@ -41,15 +41,13 @@ exports['consolidateCss'] = {
 
     var dest = 'tmp/min.css';
     // tests here
-    grunt.helper('consolidateCss', files, dest);
+    grunt.helper('consolidatecss', files, dest);
     var outCss = dest + '/file1,file2,subdir$file2.min.css';
-    test.ok(path.existsSync(outCss), "Output CSS is missing: "+outCss);
     test.equal(grunt.file.read(outCss),
                'test output');
 
+    grunt.helper('consolidatecss', files, dest, { sort:false });
     outCss = dest + '/file2,file1,subdir$file2.min.css';
-    grunt.helper('consolidateCss', files, dest, { sort:false });
-    test.ok(path.existsSync(outCss), "Output CSS is missing: "+outCss);
     test.equal(grunt.file.read(outCss),
                'test output');
 
