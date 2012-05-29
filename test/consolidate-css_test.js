@@ -36,16 +36,21 @@ exports['consolidateCss'] = {
   'helper': function(test) {
     test.expect(2);
     var files = [
-      'test/fixtures/*.html'
+      'test/fixtures/test.html'
     ];
+
     var dest = 'tmp/min.css';
     // tests here
     grunt.helper('consolidateCss', files, dest);
-    test.equal(grunt.file.read(dest + '/file1,file2,subdir$file2.min.css'),
+    var outCss = dest + '/file1,file2,subdir$file2.min.css';
+    test.ok(path.existsSync(outCss), "Output CSS is missing: "+outCss);
+    test.equal(grunt.file.read(outCss),
                'test output');
 
-    grunt.helper('coffee', files, dest, { sort:false });
-    test.equal(grunt.file.read(dest + '/file2,file1,subdir$file2.min.css'),
+    outCss = dest + '/file2,file1,subdir$file2.min.css';
+    grunt.helper('consolidateCss', files, dest, { sort:false });
+    test.ok(path.existsSync(outCss), "Output CSS is missing: "+outCss);
+    test.equal(grunt.file.read(outCss),
                'test output');
 
     test.done();
