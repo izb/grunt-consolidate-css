@@ -9,6 +9,7 @@
 module.exports = function(grunt) {
   var path = require('path');
   var fs = require('fs');
+  var exec = require('child_process').exec;
 
   // Please see the grunt documentation for more information regarding task and
   // helper creation: https://github.com/cowboy/grunt/blob/master/docs/toc.md
@@ -70,11 +71,29 @@ module.exports = function(grunt) {
   grunt.registerHelper('consolidatecss', function(src, destPath, options) {
 
     options = options || {};
-    if( options.sort !== false ) {
-      options.sort = true;
+    if( options.yuijarpath === undefined ) {
+        grunt.fail.fatal("yuijarpath option is mandatory (Path to yuicompressor.jar)");
     }
 
     var pageMap = {};
+
+    var yuiCallback = function(err, stdout, stderr) {
+      if (err) {
+        grunt.fail.fatal("YUICompressor failed with error "+err);
+        return;
+      }
+      grunt.log.write(stdout);
+      grunt.log.write(stderr);
+    };
+
+    var yuiProcess = function(resultFile) {
+
+        exec('java -jar "'+options.yuijarpath+'" --charset utf-8 --preserve-semi --line-break 150 -o "'+resultFile+'" "'+resultFile,
+            function(err, stdout, stderr) {
+                yuiCallback(err, stdout, stderr);
+            });
+
+    };
 
     try {
         var consolidate = [];
@@ -83,6 +102,7 @@ module.exports = function(grunt) {
         var content = grunt.file.read(src);
         content = content.replace(/\r/g, '');
         content = content.split('\n');
+
         for(var idx in content) {
             var line = content[idx];
             var cleanline = line.toLowerCase().trim();
@@ -116,9 +136,15 @@ module.exports = function(grunt) {
                     pageMap[sortedName] = {mergedName:mergedName, page:src};
                 }
 
-                if (doGenFile)
-                {
-                    /* TODO: Create the CSS */
+                var basedir = path.dirname(src);
+                if (doGenFile) {
+                    var concats = [];
+                    for(var i = 0; i < consolidate.length; i++) {
+                        concats.push(path.join(basedir, consolidate[i]));
+                    }
+                    var joined = grunt.helper('concat', concats);
+                    var resultFile = path.join(destPath, mergedName);
+                    yuiProcess(resultFile);
                 }
 
                 consolidate = [];
