@@ -27,30 +27,32 @@ var yuipath = "C:/Users/Ian/AppData/Roaming/Sublime Text 2/Packages/YUI Compress
 exports['consolidatecss'] = {
     setUp: function(done) {
         // setup here
-        path.exists('tmp', function(exists) {
+        var dir = 'tmp/min.css';
+        path.exists(dir, function(exists) {
             if (exists) {
-                //fs.rmdirSync('tmp');
+                fs.readdir(dir, function(err, files) {
+                    for (var i = 0; i < files.length; i++) {
+                        fs.unlinkSync(path.join(dir, files[i]));
+                    }
+                    done();
+                });
             }
-            done();
         });
     },
-    'helper': function(test) {
+    consolidateSimple: function(test) {
         test.expect(1);
         var files = ['test/fixtures/test.html'];
 
         var dest = 'tmp/min.css';
-        // tests here
+
         grunt.helper('consolidatecss', files, dest, {
             yuijarpath: yuipath
-        });
-        var outCss = path.join(dest, '/file2,file1,subdir$file2.min.css');
-        /*    test.equal(grunt.file.read(outCss),
-               '#test{color:red}body{font-size:20px}div{font-weight:bold}');*/
+        }, function() {
+            var outCss = path.join(dest, '/file2,file1,subdir$file2.min.css');
+            test.equal(grunt.file.read(outCss),
+                   '#test{color:red}body{font-size:20px}div{font-weight:bold}');
 
-        setTimeout(function() {
             test.done();
-        }, 2000);
-
-        //test.done();
+        });
     }
 };
