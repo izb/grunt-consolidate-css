@@ -1,40 +1,36 @@
 {
-  "name": "grunt-consolidate-css",
-  "description": "Consolidates and minifies your CSS files on a per-page basis",
-  "version": "0.0.1",
-  "homepage": "https://github.com/izb/grunt-consolidate-css",
-  "author": {
-    "name": "Ian Beveridge",
-    "email": "ian.beveridge@gmail.com"
-  },
-  "contributors": [],
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/izb/grunt-consolidate-css.git"
-  },
-  "bugs": {
-    "url": "https://github.com/izb/grunt-consolidate-css/issues"
-  },
-  "licenses": [
-    {
-      "type": "MIT",
-      "url": "https://github.com/izb/grunt-consolidate-css/blob/master/LICENSE-MIT"
-    }
-  ],
-  "main": "grunt.js",
-  "engines": {
-    "node": "*"
-  },
-  "scripts": {
-    "test": "grunt test"
-  },
-  "dependencies": {
-    "grunt": "~0.3.9"
-  },
-  "devDependencies": {
-    "grunt": "~0.3.9"
-  },
-  "keywords": [
-    "gruntplugin"
-  ]
+    "name": "grunt-consolidate-css",
+    "description": "Consolidates and minifies your CSS files on a per-page basis",
+    "version": "0.0.1",
+    "homepage": "https://github.com/izb/grunt-consolidate-css",
+    "author": {
+        "name": "Ian Beveridge",
+        "email": "ian.beveridge@gmail.com"
+    },
+    "contributors": [],
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/izb/grunt-consolidate-css.git"
+    },
+    "bugs": {
+        "url": "https://github.com/izb/grunt-consolidate-css/issues"
+    },
+    "licenses": [{
+        "type": "MIT",
+        "url": "https://github.com/izb/grunt-consolidate-css/blob/master/LICENSE-MIT"
+    }],
+    "main": "grunt.js",
+    "engines": {
+        "node": "*"
+    },
+    "scripts": {
+        "test": "grunt test"
+    },
+    "dependencies": {
+        "grunt": "~0.3.9"
+    },
+    "devDependencies": {
+        "grunt": "~0.3.9"
+    },
+    "keywords": ["gruntplugin"]
 }
