@@ -73,7 +73,6 @@ module.exports = function(grunt) {
 
         var pageMap = {};
 
-
         var yuiProcess = function(resultFile, callback) {
 
             resultFile = path.resolve(resultFile);

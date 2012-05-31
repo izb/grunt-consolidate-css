@@ -24,18 +24,24 @@ var grunt = require('grunt'),
 
 var yuipath = "C:/Users/Ian/AppData/Roaming/Sublime Text 2/Packages/YUI Compressor/bin/yuicompressor-2.4.7.jar";
 
+var tmpdir = 'tmp';
+
 exports['consolidatecss'] = {
     setUp: function(done) {
         // setup here
-        var dir = 'tmp/min.css';
-        path.exists(dir, function(exists) {
+        path.exists(tmpdir, function(exists) {
             if (exists) {
-                fs.readdir(dir, function(err, files) {
+                fs.readdir(tmpdir, function(err, files) {
                     for (var i = 0; i < files.length; i++) {
-                        fs.unlinkSync(path.join(dir, files[i]));
+                        fs.unlinkSync(path.join(tmpdir, files[i]));
                     }
                     done();
                 });
+            }
+            else
+            {
+                fs.mkdirSync(tmpdir);
+                done();
             }
         });
     },
@@ -43,14 +49,16 @@ exports['consolidatecss'] = {
         test.expect(1);
         var files = ['test/fixtures/test.html'];
 
-        var dest = 'tmp/min.css';
+        var dest = tmpdir;
 
         grunt.helper('consolidatecss', files, dest, {
             yuijarpath: yuipath
         }, function() {
             var outCss = path.join(dest, '/file2,file1,subdir$file2.min.css');
-            test.equal(grunt.file.read(outCss),
-                   '#test{color:red}body{font-size:20px}div{font-weight:bold}');
+
+            test.equal(
+                    grunt.file.read(outCss),
+                    '#test{color:red}body{font-size:20px}div{font-weight:bold}');
 
             test.done();
         });
