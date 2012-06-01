@@ -20,7 +20,7 @@ Then add some configuration for the plugin like so:
           app: {
             src: ['path/to/html/files/*.html', 'path/to/html/files/*.php'],
             options: {
-                sort: true
+                min: true
             }
           }
         },
@@ -40,6 +40,10 @@ into something like this:
     <link rel="stylesheet" type="text/css" href="file1,file2,subdir$file2.min.css">
 
 with all the files consolidated and minified using YUICompressor.
+
+## Options
+- 'min': Toggles minification of the CSS. It's true by default and if off, then the files will only be concatenated.
+- 'yuijarpath': YUICompressor 2.4.7 comes build-in, but pass a jar of your own here to override it.
 
 ## Release History
 0.0.1 - Initial attempt

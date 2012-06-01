@@ -67,8 +67,13 @@ module.exports = function(grunt) {
     grunt.registerHelper('consolidatecss', function(src, destPath, options, callback) {
 
         options = options || {};
+
         if (options.yuijarpath === undefined) {
-            grunt.fail.fatal("yuijarpath option is mandatory (Path to yuicompressor.jar)");
+            options.yuijarpath = path.join(__dirname, '..', 'bin/yuicompressor-2.4.7.jar');
+        }
+
+        if (options.min === undefined) {
+            options.min = true;
         }
 
         var pageMap = {};
@@ -160,7 +165,11 @@ module.exports = function(grunt) {
             grunt.file.write(dest, output.join('\n'));
 
             if(yuifile !== null) {
-                yuiProcess(yuifile, callback);
+                if(options.min) {
+                    yuiProcess(yuifile, callback);
+                } else {
+                    callback();
+                }
             }
         } catch (e) {
             grunt.log.error("Unable to consolidate CSS", e);
