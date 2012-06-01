@@ -11,6 +11,13 @@ Consolidates and minifies your CSS files on a per-page basis
 
 ### Setting up
 
+Install grunt (If you haven't already) and the plugin with
+
+    $ npm install grunt
+    $ npm install grunt-consolidate-css
+
+### Adding to your build process
+
 Modify your `grunt.js` file by adding the following line:
 
     grunt.loadNpmTasks('grunt-consolidate-css');
@@ -23,7 +30,7 @@ Then add some configuration for the plugin like so:
           app: {
             src: ['path/to/html/files/*.html', 'path/to/html/files/*.php'],
             options: {
-                min: true
+                cssdir: 'stylesheets'
             }
           }
         },
