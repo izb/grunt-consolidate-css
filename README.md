@@ -2,10 +2,10 @@
 
 Consolidates and minifies your CSS files on a per-page basis
 
-## Getting Started
-[Grunt repo](https://github.com/cowboy/grunt)
-[Getting started with grunt](https://github.com/cowboy/grunt/blob/master/docs/getting_started.md)
-[Twitter](http://twitter.com/izb)
+## Getting Started, Getting Help
+- [Grunt repo](https://github.com/cowboy/grunt)
+- [Getting started with grunt](https://github.com/cowboy/grunt/blob/master/docs/getting_started.md)
+- [Twitter](http://twitter.com/izb)
 
 ## Documentation
 
