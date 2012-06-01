@@ -76,6 +76,29 @@ exports['consolidatecss'] = {
         });
     },
 
+    testPathPrefix: function(test) {
+
+        test.expect(2);
+
+        var files = ['test/fixtures/test.html'];
+
+        var dest = 'tmp/simple';
+
+        grunt.helper('consolidatecss', files, dest, {pathPrefix: "http://example.com/subdir"}, function() {
+            var outCss = path.join(dest, '/file2,file1,subdir$file2.min.css');
+
+            test.equal(
+                    grunt.file.read(path.join(dest, 'css.min/file2,file1,subdir$file2.min.css')),
+                    '#test{color:red}body{font-size:20px}div{font-weight:bold}');
+
+            test.equal(
+                    grunt.file.read(path.join(dest, '/test.html')),
+                    '<!doctype html>\n\n    <link rel="stylesheet" type="text/css" href="http://example.com/subdir/css.min/file2,file1,subdir$file2.min.css">\n\n<div id="test">Hello, world</div>\n');
+
+            test.done();
+        });
+    },
+
     testNoMin: function(test) {
 
         test.expect(2);

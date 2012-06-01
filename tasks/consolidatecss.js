@@ -12,8 +12,12 @@ module.exports = function(grunt) {
     var exec = require('child_process').exec;
 
     path.joinUnix = function() {
-        var result = arguments[0];
+        var result = arguments[0] || "";
         for (var i = 1; i < arguments.length; i++) {
+            if (arguments[i] === undefined) {
+                continue;
+            }
+
             if (result.substr(-1) === '/') {
                 if (arguments[i].indexOf('/') === 0) {
                     result += arguments[i].substring(0);
@@ -24,7 +28,7 @@ module.exports = function(grunt) {
                 if (arguments[i].indexOf('/') === 0) {
                     result += arguments[i];
                 } else {
-                    result += '/' + arguments[i];
+                    result += (result.length>0? '/' : '') + arguments[i];
                 }
             }
         }
@@ -212,7 +216,7 @@ module.exports = function(grunt) {
 
                         consolidate = [];
 
-                        output.push(lastLineIndent + '<link rel="stylesheet" type="text/css" href="' + path.joinUnix(options.cssdir, mergedName) + '">');
+                        output.push(lastLineIndent + '<link rel="stylesheet" type="text/css" href="' + path.joinUnix(options.pathPrefix, options.cssdir, mergedName) + '">');
                         output.push(line);
 
                     } else {

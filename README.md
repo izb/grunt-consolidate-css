@@ -79,6 +79,7 @@ layout problem altogether by forcing you to decide on the order explicitely.
 - `min` Toggles minification of the CSS. It's true by default and if off, then the files will only be concatenated.
 - `yuijarpath` YUICompressor 2.4.7 comes build-in, but pass the path to a jar of your own here to override it.
 - `cssdir` The subdirectory that sits alongside the processed HTML that will hold the CSS. By default this will either be `css` or `css.min`.
+- `pathPrefix` This is a prefix added to all CSS link URLs, e.g. a domain name. Sometimes it's useful to use absolute URLs on your test environment.
 
 ## Release History
 0.0.1 - Initial attempt
