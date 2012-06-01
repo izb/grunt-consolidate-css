@@ -64,31 +64,37 @@ module.exports = function(grunt) {
         };
 
 
-    grunt.registerHelper('consolidatecsstest', function(src, destPath, options) {
+    grunt.registerHelper('consolidatecss', function(src, destPath, options, callback) {
 
         options = options || {};
+
         if (options.yuijarpath === undefined) {
-            grunt.fail.fatal("yuijarpath option is mandatory (Path to yuicompressor.jar)");
+            options.yuijarpath = path.join(__dirname, '..', 'bin/yuicompressor-2.4.7.jar');
+        }
+
+        if (options.min === undefined) {
+            options.min = true;
         }
 
         var pageMap = {};
 
-        var yuiCallback = function(err, stdout, stderr) {
-                if (err) {
-                    grunt.fail.fatal("YUICompressor failed with error " + err);
-                    return;
-                }
-                grunt.log.write(stdout);
-                grunt.log.write(stderr);
-            };
+        var yuiProcess = function(resultFile, callback) {
 
-        var yuiProcess = function(resultFile) {
+            resultFile = path.resolve(resultFile);
 
-                exec('java -jar "' + options.yuijarpath + '" --charset utf-8 --preserve-semi --line-break 150 -o "' + resultFile + '" "' + resultFile, function(err, stdout, stderr) {
-                    yuiCallback(err, stdout, stderr);
+            exec('java -jar "' + options.yuijarpath + '" --charset utf-8 --preserve-semi --line-break 150 -o "' + resultFile + '" "' + resultFile,
+                function(err, stdout, stderr) {
+                    if (err) {
+                        grunt.fail.fatal("YUICompressor failed with error " + err);
+                        return;
+                    }
+                    grunt.log.write(stdout);
+                    grunt.log.write(stderr);
+                    if (callback) {
+                        callback();
+                    }
                 });
-
-            };
+        };
 
         try {
             var consolidate = [];
@@ -97,6 +103,7 @@ module.exports = function(grunt) {
             var content = grunt.file.read(src);
             content = content.replace(/\r/g, '');
             content = content.split('\n');
+            var yuifile = null;
 
             for (var idx in content) {
                 var line = content[idx];
@@ -140,8 +147,8 @@ module.exports = function(grunt) {
                             concats.push(path.join(basedir, consolidate[i]));
                         }
                         var joined = grunt.helper('concat', concats);
-                        var resultFile = path.join(destPath, mergedName);
-                        yuiProcess(resultFile);
+                        yuifile = path.join(destPath, mergedName);
+                        grunt.file.write(yuifile, joined);
                     }
 
                     consolidate = [];
@@ -157,6 +164,13 @@ module.exports = function(grunt) {
             var dest = path.join(destPath, path.basename(src));
             grunt.file.write(dest, output.join('\n'));
 
+            if(yuifile !== null) {
+                if(options.min) {
+                    yuiProcess(yuifile, callback);
+                } else {
+                    callback();
+                }
+            }
         } catch (e) {
             grunt.log.error("Unable to consolidate CSS", e);
         }
