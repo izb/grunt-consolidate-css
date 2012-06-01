@@ -64,7 +64,7 @@ module.exports = function(grunt) {
         };
 
 
-    grunt.registerHelper('consolidatecss', function(src, destPath, options) {
+    grunt.registerHelper('consolidatecsstest', function(src, destPath, options) {
 
         options = options || {};
         if (options.yuijarpath === undefined) {
