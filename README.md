@@ -3,9 +3,9 @@
 Consolidates and minifies your CSS files on a per-page basis
 
 ## Getting Started
-
-[grunt]: https://github.com/cowboy/grunt
-[getting_started]: https://github.com/cowboy/grunt/blob/master/docs/getting_started.md
+[Grunt repo](https://github.com/cowboy/grunt)
+[Getting started with grunt](https://github.com/cowboy/grunt/blob/master/docs/getting_started.md)
+[Twitter](http://twitter.com/izb)
 
 ## Documentation
 
@@ -89,4 +89,4 @@ layout problem altogether by forcing you to decide on the order explicitely.
 - `pathPrefix` This is a prefix added to all CSS link URLs, e.g. a domain name. Sometimes it's useful to use absolute URLs on your test environment.
 
 ## Release History
-0.1.0 - First working version.
+0.1.2 - First working version.
