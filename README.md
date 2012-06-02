@@ -11,10 +11,14 @@ Consolidates and minifies your CSS files on a per-page basis
 
 ### Setting up
 
-Install grunt (If you haven't already) and the plugin with
+Install grunt (If you haven't already) and this plugin with
 
     $ npm install grunt
     $ npm install grunt-consolidate-css
+
+If you want to minify your CSS, you'll need `java` on your PATH.
+
+If you want to use SASS/SCSS stylesheets, you'll also need the `scss` converter on your PATH.
 
 ### Adding to your build process
 
@@ -68,6 +72,21 @@ will become
 
     <link rel="stylesheet" type="text/css" href="css.min/file1,file2.min.css">
     <link rel="stylesheet" type="text/css" href="css.min/subdir$file2,subdir$file3.min.css">
+
+### SCSS/SASS
+
+You can mix CSS and SCSS/SASS files together in the same groups. The plugin will work out what's what
+from the file extension and will convert the files transparently.
+
+    <link rel="stylesheet" type="text/sass" href="file1.sass">
+    <link rel="stylesheet" type="text/scss" href="file2.scss">
+    <link rel="stylesheet" type="text/css" href="file3.css">
+
+will become
+
+    <link rel="stylesheet" type="text/css" href="file1,file2,file3.min.css">
+
+All output as one consolidated, minified, pure CSS file.
 
 ### Cross-page validation
 

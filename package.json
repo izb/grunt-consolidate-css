@@ -1,7 +1,7 @@
 {
     "name": "grunt-consolidate-css",
-    "description": "Consolidates and minifies your CSS files on a per-page basis",
-    "version": "0.1.2",
+    "description": "Consolidates, converts and minifies your CSS, SASS, and SCSS files directed purely by your HTML",
+    "version": "0.2.0",
     "homepage": "https://github.com/izb/grunt-consolidate-css",
     "author": {
         "name": "Ian Beveridge",

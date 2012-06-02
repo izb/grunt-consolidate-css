@@ -6,10 +6,54 @@
  * Licensed under the MIT license.
  */
 
+
 module.exports = function(grunt) {
     var path = require('path');
     var fs = require('fs');
     var exec = require('child_process').exec;
+
+    var Batch = function(files, mergedName) {
+
+        this.batch = files.slice(0);
+        this.mergedName = mergedName;
+        var _this = this;
+
+        this.firstNonCSS = function() {
+            for (var i = 0; i < _this.batch.length; i++) {
+                if(_this.batch[i].substr(-4)===".css") {
+                    continue;
+                } else {
+                    return i;
+                }
+            }
+            return -1;
+        };
+
+        this.firstIsMinified = function() {
+            return (_this.batch[0].substr(-8)===".min.css");
+        };
+
+        this.count = function() {
+            return _this.batch.length;
+        };
+
+        batch.concatenate = function() {
+            var joined = grunt.helper('concat', _this.batch);
+            var outfile = path.join(destPath, options.cssdir, _this.mergedName + '.css');
+            grunt.file.write(outfile, joined);
+            _this.batch = [outfile];
+        };
+
+        batch.convert = function(idx, cb) {
+
+        };
+
+        batch.minify = function(idx, cb) {
+
+        };
+
+        return this;
+    };
 
     path.joinUnix = function() {
         var result = arguments[0] || "";
@@ -35,11 +79,19 @@ module.exports = function(grunt) {
         return result;
     };
 
-    // Please see the grunt documentation for more information regarding task and
-    // helper creation: https://github.com/cowboy/grunt/blob/master/docs/toc.md
-    // ==========================================================================
-    // TASKS
-    // ==========================================================================
+    var cssPathPattern = new RegExp(/href\s*=["'](.*)?["']/);
+    var relPattern = new RegExp(/rel\s*=\s*["']stylesheet["']/);
+    var leadingSpacePattern = new RegExp(/(\s*)./);
+
+    var mergeNames = function(names) {
+        names = names.slice(0);
+        var name = "";
+        for (var i = 0; i < names.length; i++) {
+            names[i] = names[i].replace(/\//g, '$').replace(/\.css$/, '').replace(/\.scss$/, '').replace(/\.sass$/, '');
+        }
+        return names.join(',');
+    };
+
     grunt.registerMultiTask('consolidatecss', 'Consolidates and minifies your CSS files on a per-page basis', function() {
 
         var dest = this.file.dest,
@@ -52,22 +104,6 @@ module.exports = function(grunt) {
             return false;
         }
     });
-
-    // ==========================================================================
-    // HELPERS
-    // ==========================================================================
-    var cssPathPattern = new RegExp(/href\s*=["'](.*)?["']/);
-    var relPattern = new RegExp(/rel\s*=\s*["']stylesheet["']/);
-    var leadingSpacePattern = new RegExp(/(\s*)./);
-
-    var mergeNames = function(names) {
-        names = names.slice(0);
-        var name = "";
-        for (var i = 0; i < names.length; i++) {
-            names[i] = names[i].replace(/\//g, '$').replace(/\.css$/, '');
-        }
-        return names.join(',') + '.min.css';
-    };
 
 
     grunt.registerHelper('consolidatecss', function(srces, destPath, options, callback) {
@@ -86,8 +122,16 @@ module.exports = function(grunt) {
             options.cssdir = options.min ? 'css.min' : 'css';
         }
 
+        try {
+            fs.mkdirSync(path.resolve(destPath));
+        } catch(e) {
+            /* Folder exists. Ignore. */
+        }
+
         var pageMap = {};
         var i, j;
+        var killfiles = [];
+        var batches = [];
 
         var fail = function(msg, cb) {
             if(options._neverfail) {
@@ -121,35 +165,98 @@ module.exports = function(grunt) {
             return true;
         };
 
-        var yuiProcess = function(resultFile, callback) {
-            resultFile = path.resolve(resultFile);
+//         var yuiProcess = function(resultFile, callback) {
+//             resultFile = path.resolve(resultFile);
 
-            exec('java -jar "' + options.yuijarpath + '" --charset utf-8 --preserve-semi --line-break 150 -o "' + resultFile + '" "' + resultFile, function(err, stdout, stderr) {
-                if (err) {
-                    fail("YUICompressor failed with error " + err, callback);
-                    return;
-                }
-                grunt.log.write(stdout);
-                grunt.log.write(stderr);
-                if (callback) {
-                    callback();
-                }
-            });
-        };
+//             exec('java -jar "' + options.yuijarpath + '" --charset utf-8 --preserve-semi --line-break 150 -o "' + resultFile + '" "' + resultFile, function(err, stdout, stderr) {
+//                 if (err) {
+//                     fail("YUICompressor failed with error " + err, callback);
+//                     return;
+//                 }
+//                 grunt.log.write(stdout);
+//                 grunt.log.write(stderr);
+//                 if (callback) {
+//                     callback();
+//                 }
+//             });
+//         };
 
-        var compressProc = function(files, callback) {
-            yuiProcess(files[0], function() {
-                files = files.slice(1);
-                if (files.length > 0) {
-                    compressProc(files, callback);
-                } else {
-                    if (callback)
-                    {
-                        callback();
-                    }
-                }
-            });
-        };
+//         var compressProc = function(files, callback) {
+//             yuiProcess(files[0], function() {
+//                 files = files.slice(1);
+//                 if (files.length > 0) {
+//                     compressProc(files, callback);
+//                 } else {
+//                     if (callback)
+//                     {
+//                         callback();
+//                     }
+//                 }
+//             });
+//         };
+
+//         var scssProcess = function(scssFile, destDir, callback) {
+//             scssFile = path.resolve(scssFile);
+
+//             var syntaxFlag = "";
+
+//             if(scssFile.substr(-4)===".css") {
+//                 callback(scssFile, false);
+//                 return;
+//             }
+
+//             if(scssFile.substr(-5)===".sass") {
+//                 syntaxFlag = " --sass";
+//             }
+
+//             try {
+//                 fs.mkdirSync(path.resolve(destDir));
+//             } catch(e) {
+//                 /* Folder exists. Ignore. */
+//             }
+
+//             var outfile = path.join(path.resolve(destDir), path.basename(scssFile))+'.css';
+
+//             exec('scss -C' + syntaxFlag + ' ' + scssFile + ' > '+outfile, function(err, stdout, stderr) {
+//                 if (err) {
+//                     fail("scss converter failed with error " + err, callback);
+//                     return;
+//                 }
+//                 grunt.log.write(stdout);
+//                 grunt.log.write(stderr);
+//                 if (callback) {
+//                     callback(outfile, true);
+//                 }
+//             });
+//         };
+
+//         var scssProc = function(files, destDir, csslist, callback) {
+//             scssProcess(files[0], destDir, function(outfile, kill) {
+//                 if (kill) {
+//                     killfiles.push(outfile);
+//                 }
+//                 csslist.push(outfile);
+//                 files = files.slice(1);
+//                 if (files.length > 0) {
+//                     scssProc(files, destDir, csslist, callback);
+//                 } else {
+//                     if (callback)
+//                     {
+//                         callback(csslist, destDir);
+//                     }
+//                 }
+//             });
+//         };
+
+//         var processConvertedFiles = function(processed, destDir) {
+//             console.log('kill '+killfiles);
+
+//             var joined = grunt.helper('concat', processed);
+//             var yuifile = path.join(destPath, options.cssdir, mergedName);
+//             grunt.file.write(yuifile, joined);
+//             yuifiles.push(yuifile);
+// console.log("YUIFILE "+yuifiles);
+//         };
 
         try {
             for (j = 0; j < srces.length; j++) {
@@ -202,16 +309,15 @@ module.exports = function(grunt) {
                         }
 
                         var basedir = path.dirname(src);
+
                         if (doGenFile) {
+
                             var concats = [];
                             for (i = 0; i < consolidate.length; i++) {
                                 concats.push(path.join(basedir, consolidate[i]));
                             }
-                            var joined = grunt.helper('concat', concats);
-                            var yuifile = path.join(destPath, options.cssdir, mergedName);
-                            grunt.file.write(yuifile, joined);
-                            yuifiles.push(yuifile);
-                            doGenFile = false;
+
+                            batches.push(new Batch(concats, mergedName));
                         }
 
                         consolidate = [];
@@ -222,16 +328,55 @@ module.exports = function(grunt) {
                     } else {
                         output.push(line);
                     }
-                }
+                } /* for [css in html] */
 
                 var dest = path.join(destPath, path.basename(src));
                 grunt.file.write(dest, output.join('\n'));
 
-                if (options.min && yuifiles.length > 0) {
-                    compressProc(yuifiles, callback);
-                } else {
-                    callback();
+            } /* for [html in input] */
+
+
+            var processBatches = function(batches, terminate) {
+
+                if (batches.length === 0) {
+                    terminate();
+                    return;
                 }
+
+                var batch = batches[0];
+
+                var idx = batch.firstNonCSS();
+
+                if (idx < 0) {
+                    if (batch.count == 1) {
+                        if (options.min && !batch.firstIsMinified()) {
+                            /* One single CSS. minify it. */
+                            batch.minify(0, function() {
+                                /* This batch is done */
+                                processBatches(batches.slice(1), terminate);
+                            });
+                        } else {
+                            processBatches(batches.slice(1), terminate);
+                        }
+                    } else {
+                        /* Batch has several pure CSS files. Concatenate them */
+                        batch.concatenate();
+                        /* Feed it back in to minify */
+                        processBatches(batches, terminate);
+                    }
+                    /* Batch is all CSS. Concatenate them */
+                } else {
+                    batch.convert(idx, function() {
+                        /* Feed it back in to get the next one */
+                        processBatches(batches, terminate);
+                    });
+                }
+            };
+
+            if (batches.length > 0) {
+                processBatches(batches, callback);
+            } else {
+                callback();
             }
 
         } catch (e) {
