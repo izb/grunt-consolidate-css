@@ -12,9 +12,10 @@ module.exports = function(grunt) {
     var fs = require('fs');
     var exec = require('child_process').exec;
 
-    var Batch = function(files, mergedName) {
+    var Batch = function(basedir, files, mergedName) {
 
         this.batch = files.slice(0);
+        this.basedir = basedir;
         this.mergedName = mergedName;
         var _this = this;
 
@@ -37,19 +38,68 @@ module.exports = function(grunt) {
             return _this.batch.length;
         };
 
-        batch.concatenate = function() {
+        this.concatenate = function(destPath) {
             var joined = grunt.helper('concat', _this.batch);
-            var outfile = path.join(destPath, options.cssdir, _this.mergedName + '.css');
+            var outfile = path.join(destPath, _this.mergedName + '.css');
             grunt.file.write(outfile, joined);
             _this.batch = [outfile];
         };
 
-        batch.convert = function(idx, cb) {
-
+        this.copyBatchTo = function(outdir) {
+            for (var i = 0; i < _this.batch.length; i++) {
+                var name = _this.batch[i];
+                var out = path.join(outdir, name);
+                grunt.file.copy(path.join(_this.basedir, name), out);
+                _this.batch[i] = out;
+            }
         };
 
-        batch.minify = function(idx, cb) {
+        this.convert = function(fail, destPath, idx, cb) {
+            var infile = path.resolve(_this.batch[idx]);
+            var outfile = "";
 
+            var syntaxFlag = "";
+            if(infile.substr(-5)===".sass") {
+                syntaxFlag = " --sass";
+                outfile = path.basename(infile, '.sass') + '.css';
+            } else {
+                outfile = path.basename(infile, '.scss') + '.css';
+            }
+            outfile = path.join(path.dirname(infile), outfile);
+
+            try {
+                fs.mkdirSync(path.resolve(destPath));
+            } catch(e) {
+                /* Folder exists. Fine, ignore. */
+            }
+
+            exec('scss -C' + syntaxFlag + ' ' + infile + ' > '+outfile, function(err, stdout, stderr) {
+                if (err) {
+                    fail("scss converter failed with file "+infile+"with error " + err, cb);
+                    return;
+                }
+                _this.batch[idx] = outfile;
+                grunt.log.write(stdout);
+                grunt.log.write(stderr);
+                cb();
+            });
+        };
+
+        this.minify = function(fail, destPath, yuijarpath, idx, cb) {
+            var filename = _this.batch[idx];
+            var infile = path.resolve(filename);
+            var outfile = path.basename(filename, '.css') + '.min.css';
+            outfile = path.join(destPath, outfile);
+
+            exec('java -jar "' + yuijarpath + '" --charset utf-8 --preserve-semi --line-break 150 -o "' + outfile + '" "' + infile, function(err, stdout, stderr) {
+                if (err) {
+                    fail("YUICompressor failed with error " + err, cb);
+                    return;
+                }
+                grunt.log.write(stdout);
+                grunt.log.write(stderr);
+                cb();
+            });
         };
 
         return this;
@@ -57,6 +107,7 @@ module.exports = function(grunt) {
 
     path.joinUnix = function() {
         var result = arguments[0] || "";
+
         for (var i = 1; i < arguments.length; i++) {
             if (arguments[i] === undefined) {
                 continue;
@@ -76,6 +127,7 @@ module.exports = function(grunt) {
                 }
             }
         }
+
         return result;
     };
 
@@ -135,7 +187,7 @@ module.exports = function(grunt) {
 
         var fail = function(msg, cb) {
             if(options._neverfail) {
-                /* Testing a unit test plugin with a unit test is tricky, because
+                /* Testing a unit test plugin with its own unit test app is tricky, because
                  * you can't test that the unit test framework failed a test, because
                  * it fails the test checking that the test was failed. Hmm.
                  * Anyway, that's why we have a backdoor flag for unit tests, passing
@@ -164,99 +216,6 @@ module.exports = function(grunt) {
             }
             return true;
         };
-
-//         var yuiProcess = function(resultFile, callback) {
-//             resultFile = path.resolve(resultFile);
-
-//             exec('java -jar "' + options.yuijarpath + '" --charset utf-8 --preserve-semi --line-break 150 -o "' + resultFile + '" "' + resultFile, function(err, stdout, stderr) {
-//                 if (err) {
-//                     fail("YUICompressor failed with error " + err, callback);
-//                     return;
-//                 }
-//                 grunt.log.write(stdout);
-//                 grunt.log.write(stderr);
-//                 if (callback) {
-//                     callback();
-//                 }
-//             });
-//         };
-
-//         var compressProc = function(files, callback) {
-//             yuiProcess(files[0], function() {
-//                 files = files.slice(1);
-//                 if (files.length > 0) {
-//                     compressProc(files, callback);
-//                 } else {
-//                     if (callback)
-//                     {
-//                         callback();
-//                     }
-//                 }
-//             });
-//         };
-
-//         var scssProcess = function(scssFile, destDir, callback) {
-//             scssFile = path.resolve(scssFile);
-
-//             var syntaxFlag = "";
-
-//             if(scssFile.substr(-4)===".css") {
-//                 callback(scssFile, false);
-//                 return;
-//             }
-
-//             if(scssFile.substr(-5)===".sass") {
-//                 syntaxFlag = " --sass";
-//             }
-
-//             try {
-//                 fs.mkdirSync(path.resolve(destDir));
-//             } catch(e) {
-//                 /* Folder exists. Ignore. */
-//             }
-
-//             var outfile = path.join(path.resolve(destDir), path.basename(scssFile))+'.css';
-
-//             exec('scss -C' + syntaxFlag + ' ' + scssFile + ' > '+outfile, function(err, stdout, stderr) {
-//                 if (err) {
-//                     fail("scss converter failed with error " + err, callback);
-//                     return;
-//                 }
-//                 grunt.log.write(stdout);
-//                 grunt.log.write(stderr);
-//                 if (callback) {
-//                     callback(outfile, true);
-//                 }
-//             });
-//         };
-
-//         var scssProc = function(files, destDir, csslist, callback) {
-//             scssProcess(files[0], destDir, function(outfile, kill) {
-//                 if (kill) {
-//                     killfiles.push(outfile);
-//                 }
-//                 csslist.push(outfile);
-//                 files = files.slice(1);
-//                 if (files.length > 0) {
-//                     scssProc(files, destDir, csslist, callback);
-//                 } else {
-//                     if (callback)
-//                     {
-//                         callback(csslist, destDir);
-//                     }
-//                 }
-//             });
-//         };
-
-//         var processConvertedFiles = function(processed, destDir) {
-//             console.log('kill '+killfiles);
-
-//             var joined = grunt.helper('concat', processed);
-//             var yuifile = path.join(destPath, options.cssdir, mergedName);
-//             grunt.file.write(yuifile, joined);
-//             yuifiles.push(yuifile);
-// console.log("YUIFILE "+yuifiles);
-//         };
 
         try {
             for (j = 0; j < srces.length; j++) {
@@ -314,15 +273,15 @@ module.exports = function(grunt) {
 
                             var concats = [];
                             for (i = 0; i < consolidate.length; i++) {
-                                concats.push(path.join(basedir, consolidate[i]));
+                                concats.push(consolidate[i]);
                             }
 
-                            batches.push(new Batch(concats, mergedName));
+                            batches.push(new Batch(basedir, concats, mergedName));
                         }
 
                         consolidate = [];
 
-                        output.push(lastLineIndent + '<link rel="stylesheet" type="text/css" href="' + path.joinUnix(options.pathPrefix, options.cssdir, mergedName) + '">');
+                        output.push(lastLineIndent + '<link rel="stylesheet" type="text/css" href="' + path.joinUnix(options.pathPrefix, options.cssdir, mergedName) + (options.min?'.min':'') + '.css">');
                         output.push(line);
 
                     } else {
@@ -335,6 +294,7 @@ module.exports = function(grunt) {
 
             } /* for [html in input] */
 
+            var outdir = path.join(destPath, options.cssdir);
 
             var processBatches = function(batches, terminate) {
 
@@ -348,10 +308,10 @@ module.exports = function(grunt) {
                 var idx = batch.firstNonCSS();
 
                 if (idx < 0) {
-                    if (batch.count == 1) {
+                    if (batch.count() === 1) {
                         if (options.min && !batch.firstIsMinified()) {
                             /* One single CSS. minify it. */
-                            batch.minify(0, function() {
+                            batch.minify(fail, outdir, options.yuijarpath, 0, function() {
                                 /* This batch is done */
                                 processBatches(batches.slice(1), terminate);
                             });
@@ -360,18 +320,22 @@ module.exports = function(grunt) {
                         }
                     } else {
                         /* Batch has several pure CSS files. Concatenate them */
-                        batch.concatenate();
+                        batch.concatenate(outdir);
                         /* Feed it back in to minify */
                         processBatches(batches, terminate);
                     }
                     /* Batch is all CSS. Concatenate them */
                 } else {
-                    batch.convert(idx, function() {
+                    batch.convert(fail, destPath, idx, function() {
                         /* Feed it back in to get the next one */
                         processBatches(batches, terminate);
                     });
                 }
             };
+
+            batches.forEach(function(batch) {
+                batch.copyBatchTo(outdir);
+            });
 
             if (batches.length > 0) {
                 processBatches(batches, callback);
