@@ -108,4 +108,5 @@ layout problem altogether by forcing you to decide on the order explicitely.
 - `pathPrefix` This is a prefix added to all CSS link URLs, e.g. a domain name. Sometimes it's useful to use absolute URLs on your test environment.
 
 ## Release History
+0.2.1 - First version with SCSS/SASS support
 0.1.2 - First working version.
