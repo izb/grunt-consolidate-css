@@ -3,7 +3,6 @@
  * https://github.com/izb/grunt-consolidate-css
  *
  * Copyright (c) 2012 Ian Beveridge
- * Licensed under the MIT license.
  */
 
 
@@ -12,10 +11,11 @@ module.exports = function(grunt) {
     var fs = require('fs');
     var exec = require('child_process').exec;
 
-    var Batch = function(basedir, files, mergedName) {
+    var Batch = function(options, subdir, files, mergedName) {
 
         this.batch = files.slice(0);
-        this.basedir = basedir;
+        this.options = options;
+        this.subdir = subdir;
         this.mergedName = mergedName;
         var _this = this;
 
@@ -48,8 +48,8 @@ module.exports = function(grunt) {
         this.copyBatchTo = function(outdir) {
             for (var i = 0; i < _this.batch.length; i++) {
                 var name = _this.batch[i];
-                var out = path.join(outdir, name);
-                grunt.file.copy(path.join(_this.basedir, name), out);
+                var out = path.join(outdir, subdir, name);
+                grunt.file.copy(path.join(_this.subdir, name), out);
                 _this.batch[i] = out;
             }
         };
@@ -162,6 +162,20 @@ module.exports = function(grunt) {
 
         options = options || {};
 
+        var fail = function(msg, cb) {
+            if(options._neverfail) {
+                /* Testing a unit test plugin with its own unit test app is tricky, because
+                 * you can't test that the unit test framework correctly failed a test, because
+                 * it fails the test checking that the test was failed. Hmm.
+                 * Anyway, that's why we have a backdoor flag for unit tests, passing
+                 * failure messages back to the callback. */
+                cb(msg);
+                return true;
+            }
+            grunt.fail.fatal(msg);
+            return false;
+        };
+
         if (options.yuijarpath === undefined) {
             options.yuijarpath = path.join(__dirname, '..', 'bin/yuicompressor-2.4.7.jar');
         }
@@ -178,6 +192,10 @@ module.exports = function(grunt) {
             options.intermediates = false;
         }
 
+        if (options.basedir === undefined) {
+            fail("basedir option is required for grunt-consolidate-css plugin", callback);
+        }
+
         try {
             fs.mkdirSync(path.resolve(destPath));
         } catch(e) {
@@ -188,20 +206,6 @@ module.exports = function(grunt) {
         var i, j;
         var killfiles = [];
         var batches = [];
-
-        var fail = function(msg, cb) {
-            if(options._neverfail) {
-                /* Testing a unit test plugin with its own unit test app is tricky, because
-                 * you can't test that the unit test framework correctly failed a test, because
-                 * it fails the test checking that the test was failed. Hmm.
-                 * Anyway, that's why we have a backdoor flag for unit tests, passing
-                 * failure messages back to the callback. */
-                cb(msg);
-                return true;
-            }
-            grunt.fail.fatal(msg);
-            return false;
-        };
 
         var isStyleSheetLine = function(line, callback) {
             if (line.indexOf('<link ') !== 0) {
@@ -224,7 +228,7 @@ module.exports = function(grunt) {
         try {
             for (j = 0; j < srces.length; j++) {
 
-                var src = srces[j];
+                var src = path.join(options.basedir, srces[j]);
                 var content = grunt.file.read(src);
                 content = content.replace(/\r/g, '');
                 content = content.split('\n');
@@ -251,6 +255,7 @@ module.exports = function(grunt) {
                             return;
                         }
                     } else if (consolidate.length > 0) {
+                        /* Non-link line, but we've just passed some, so process what we have so far */
 
                         var sorted = consolidate.slice(0).sort();
                         var sortedName = mergeNames(sorted);
@@ -271,7 +276,7 @@ module.exports = function(grunt) {
                             };
                         }
 
-                        var basedir = path.dirname(src);
+                        var subdir = path.dirname(src);
 
                         if (doGenFile) {
 
@@ -280,7 +285,7 @@ module.exports = function(grunt) {
                                 concats.push(consolidate[i]);
                             }
 
-                            batches.push(new Batch(basedir, concats, mergedName));
+                            batches.push(new Batch(options, subdir, concats, mergedName));
                         }
 
                         consolidate = [];
@@ -292,8 +297,10 @@ module.exports = function(grunt) {
                         output.push(line);
                     }
                 } /* for [css in html] */
-
-                var dest = path.join(destPath, path.basename(src));
+console.log("1) "+destPath);
+console.log("2) "+options.basedir);
+console.log("3) "+src+", "+path.basename(src));
+                var dest = path.join(destPath, options.basedir, path.basename(src));
                 grunt.file.write(dest, output.join('\n'));
 
             } /* for [html in input] */
