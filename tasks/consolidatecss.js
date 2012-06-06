@@ -21,9 +21,7 @@ module.exports = function(grunt) {
 
         this.firstNonCSS = function() {
             for (var i = 0; i < _this.batch.length; i++) {
-                if(_this.batch[i].substr(-4)===".css") {
-                    continue;
-                } else {
+                if(_this.batch[i].substr(-4)!==".css") {
                     return i;
                 }
             }
@@ -48,8 +46,8 @@ module.exports = function(grunt) {
         this.copyBatchTo = function(outdir) {
             for (var i = 0; i < _this.batch.length; i++) {
                 var name = _this.batch[i];
-                var out = path.join(outdir, subdir, name);
-                grunt.file.copy(path.join(_this.subdir, name), out);
+                var out = path.join(outdir, name);
+                grunt.file.copy(path.join(_this.options.basedir, name), out);
                 _this.batch[i] = out;
             }
         };
@@ -109,21 +107,22 @@ module.exports = function(grunt) {
         var result = arguments[0] || "";
 
         for (var i = 1; i < arguments.length; i++) {
-            if (arguments[i] === undefined) {
-                continue;
-            }
+            var next = arguments[i];
+            if (next !== undefined) {
+                next = next.replace(/\\/g, '/');
 
-            if (result.substr(-1) === '/') {
-                if (arguments[i].indexOf('/') === 0) {
-                    result += arguments[i].substring(0);
+                if (result.substr(-1) === '/') {
+                    if (next.indexOf('/') === 0) {
+                        result += next.substring(0);
+                    } else {
+                        result += next;
+                    }
                 } else {
-                    result += arguments[i];
-                }
-            } else {
-                if (arguments[i].indexOf('/') === 0) {
-                    result += arguments[i];
-                } else {
-                    result += (result.length>0? '/' : '') + arguments[i];
+                    if (next.indexOf('/') === 0) {
+                        result += next;
+                    } else {
+                        result += (result.length>0? '/' : '') + next;
+                    }
                 }
             }
         }
@@ -139,7 +138,7 @@ module.exports = function(grunt) {
         names = names.slice(0);
         var name = "";
         for (var i = 0; i < names.length; i++) {
-            names[i] = names[i].replace(/\//g, '$').replace(/\.css$/, '').replace(/\.scss$/, '').replace(/\.sass$/, '');
+            names[i] = names[i].replace(/\\/g, '$').replace(/\//g, '$').replace(/\.css$/, '').replace(/\.scss$/, '').replace(/\.sass$/, '');
         }
         return names.join(',');
     };
@@ -196,6 +195,8 @@ module.exports = function(grunt) {
             fail("basedir option is required for grunt-consolidate-css plugin", callback);
         }
 
+        options.basedir = path.join(options.basedir, "\\");
+
         try {
             fs.mkdirSync(path.resolve(destPath));
         } catch(e) {
@@ -229,6 +230,16 @@ module.exports = function(grunt) {
             for (j = 0; j < srces.length; j++) {
 
                 var src = path.join(options.basedir, srces[j]);
+                src = path.normalize(src);
+
+                if (src.indexOf(options.basedir) !== 0) {
+                    /* After normalization, .. parts of the path could bring it out of the basedir */
+                    fail(src +" must be in a subdir of basedir ("+options.basedir+")");
+                    return;
+                }
+
+                var pagedir = path.dirname(src).substr(options.basedir.length);
+
                 var content = grunt.file.read(src);
                 content = content.replace(/\r/g, '');
                 content = content.split('\n');
@@ -244,7 +255,13 @@ module.exports = function(grunt) {
                     if (isStyleSheetLine(cleanline, callback)) {
                         var cssPath = line.match(cssPathPattern);
                         if (cssPath !== null) {
-                            cssPath = cssPath[1];
+                            cssPath = path.join(pagedir, cssPath[1]);
+
+                            if (path.join(options.basedir, cssPath).indexOf(options.basedir) !== 0) {
+                                fail(cssPath +" must be in a subdir of basedir ("+options.basedir+")");
+                                return;
+                            }
+
                             consolidate.push(cssPath);
                             var leading = line.match(leadingSpacePattern);
                             if (leading !== null) {
@@ -266,7 +283,7 @@ module.exports = function(grunt) {
                             if (pageMap[sortedName].mergedName === mergedName) { /* file already merged. */
                                 doGenFile = false;
                             } else {
-                                fail("Pages ref same CSS in different orders 1) " + pageMap[sortedName].page + " 2) " + src, callback);
+                                fail("Pages ref same CSS in different orders 1) " + pageMap[sortedName].page.replace(/\\/g, '/') + " 2) " + src.replace(/\\/g, '/'), callback);
                                 return;
                             }
                         } else {
@@ -290,17 +307,30 @@ module.exports = function(grunt) {
 
                         consolidate = [];
 
-                        output.push(lastLineIndent + '<link rel="stylesheet" type="text/css" href="' + path.joinUnix(options.pathPrefix, options.cssdir, mergedName) + (options.min?'.min':'') + '.css">');
+
+                        var pathJourney;
+                        if(options.pathPrefix===undefined) {
+                            var rootPath = "";
+                            var stepsToRoot = pagedir.replace(/\\/g, '/').split('/').length;
+                            while(pagedir.length>0 && stepsToRoot-->0) {
+                                rootPath += "../";
+                            }
+                            pathJourney = path.join(rootPath, options.cssdir, mergedName);
+                        } else {
+                            pathJourney = path.joinUnix(options.pathPrefix, options.cssdir, mergedName);
+                        }
+
+                        pathJourney = pathJourney.replace(/\\/g, '/');
+
+                        output.push(lastLineIndent + '<link rel="stylesheet" type="text/css" href="' + pathJourney + (options.min?'.min':'') + '.css">');
                         output.push(line);
 
                     } else {
                         output.push(line);
                     }
                 } /* for [css in html] */
-console.log("1) "+destPath);
-console.log("2) "+options.basedir);
-console.log("3) "+src+", "+path.basename(src));
-                var dest = path.join(destPath, options.basedir, path.basename(src));
+
+                var dest = path.join(destPath, src.substr(options.basedir.length));
                 grunt.file.write(dest, output.join('\n'));
 
             } /* for [html in input] */
