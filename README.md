@@ -106,7 +106,8 @@ layout problem altogether by forcing you to decide on the order explicitely.
 - `yuijarpath` YUICompressor 2.4.7 comes build-in, but pass the path to a jar of your own here to override it.
 - `cssdir` The subdirectory that sits alongside the processed HTML that will hold the CSS. By default this will either be `css` or `css.min`.
 - `pathPrefix` This is a prefix added to all CSS link URLs, e.g. a domain name. Sometimes it's useful to use absolute URLs on your test environment.
+- `intermediates` By default, the plugin cleans up after itself, deleting all intermediate stages of CSS that are not the final result. Set this to false to keep the unminified and unconsolidated forms of your CSS.
 
 ## Release History
-0.2.1 - First version with SCSS/SASS support
-0.1.2 - First working version.
+- 0.2.1 - First version with SCSS/SASS support
+- 0.1.2 - First working version.

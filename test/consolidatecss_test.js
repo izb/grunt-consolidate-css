@@ -5,61 +5,62 @@ var grunt = require('grunt'),
 var tmpdir = 'tmp';
 
 function rmdirs(dir, cb){
-    fs.readdir(dir, function(err, files){
-        if (err) {
-            return cb(err);
-        }
-
-        var rmFile = function(err) {
-
-            if (err) {
-                return cb(err);
-            }
-
-            var filename = files.shift();
-
-            if (filename === null || typeof filename === 'undefined') {
-                return fs.rmdir(dir, cb);
-            }
-
-            var file = dir+'/'+filename;
-            fs.stat(file, function(err, stat){
+    path.exists(dir, function(exists) {
+        if (exists) {
+            fs.readdir(dir, function(err, files){
                 if (err) {
                     return cb(err);
                 }
 
-                if (stat.isDirectory()) {
-                    rmdirs(file, rmFile);
-                } else {
-                    fs.unlink(file, rmFile);
-                }
-            });
-        };
+                var rmFile = function(err) {
 
-        rmFile();
+                    if (err) {
+                        return cb(err);
+                    }
+
+                    var filename = files.shift();
+
+                    if (filename === null || typeof filename === 'undefined') {
+                        return fs.rmdir(dir, cb);
+                    }
+
+                    var file = dir+'/'+filename;
+                    fs.stat(file, function(err, stat){
+                        if (err) {
+                            return cb(err);
+                        }
+
+                        if (stat.isDirectory()) {
+                            rmdirs(file, rmFile);
+                        } else {
+                            fs.unlink(file, rmFile);
+                        }
+                    });
+                };
+
+                rmFile();
+            });
+        } else {
+            cb();
+        }
     });
 }
 
 
-exports['consolidatecss'] = {
+exports['consolidatecss_simple'] = {
+
     setUp: function(done) {
-        path.exists(tmpdir, function(exists) {
-            if (exists) {
-                rmdirs(tmpdir, done);
-            } else {
-                fs.mkdirSync(tmpdir);
-                done();
-            }
-        });
+        var dest = path.join(tmpdir, 'simple');
+        rmdirs(dest, done);
     },
 
     testSimple: function(test) {
 
         test.expect(2);
 
-        var files = ['test/fixtures/test.html'];
+        var dest = path.join(tmpdir, 'simple');
 
-        var dest = 'tmp/simple';
+        var files = ['test/fixtures/test.html'];
 
         grunt.helper('consolidatecss', files, dest, null, function() {
 
@@ -73,6 +74,13 @@ exports['consolidatecss'] = {
 
             test.done();
         });
+    }
+};
+
+exports['consolidatecss_sass'] = {
+    setUp: function(done) {
+        var dest = path.join(tmpdir, 'sass-scss');
+        rmdirs(dest, done);
     },
 
     testSASSSCSS: function(test) {
@@ -81,7 +89,7 @@ exports['consolidatecss'] = {
 
         var files = ['test/fixtures/test-sass-scss.html'];
 
-        var dest = 'tmp/sass-scss';
+        var dest = path.join(tmpdir, 'sass-scss');
 
         grunt.helper('consolidatecss', files, dest, null, function() {
 
@@ -95,6 +103,15 @@ exports['consolidatecss'] = {
 
             test.done();
         });
+    }
+};
+
+
+exports['consolidatecss_path_prefix'] = {
+    setUp: function(done) {
+        grunt.log.writeln("Test: Path prefix");
+        var dest = path.join(tmpdir, 'path-prefix');
+        rmdirs(dest, done);
     },
 
     testPathPrefix: function(test) {
@@ -103,7 +120,7 @@ exports['consolidatecss'] = {
 
         var files = ['test/fixtures/test.html'];
 
-        var dest = 'tmp/path-prefix';
+        var dest = path.join(tmpdir, 'path-prefix');
 
         grunt.helper('consolidatecss', files, dest, {pathPrefix: "http://example.com/subdir"}, function() {
 
@@ -117,6 +134,14 @@ exports['consolidatecss'] = {
 
             test.done();
         });
+    }
+};
+
+
+exports['consolidatecss_nomin'] = {
+    setUp: function(done) {
+        var dest = path.join(tmpdir, 'nomin');
+        rmdirs(dest, done);
     },
 
     testNoMin: function(test) {
@@ -125,7 +150,7 @@ exports['consolidatecss'] = {
 
         var files = ['test/fixtures/test.html'];
 
-        var dest = 'tmp/nomin';
+        var dest = path.join(tmpdir, 'nomin');
 
         grunt.helper('consolidatecss', files, dest, { min: false }, function() {
             test.equal(
@@ -138,6 +163,13 @@ exports['consolidatecss'] = {
 
             test.done();
         });
+    }
+};
+
+exports['consolidatecss_grouped'] = {
+    setUp: function(done) {
+        var dest = path.join(tmpdir, 'grouped');
+        rmdirs(dest, done);
     },
 
     testGroups: function(test) {
@@ -146,7 +178,7 @@ exports['consolidatecss'] = {
 
         var files = ['test/fixtures/grouped.html'];
 
-        var dest = 'tmp/grouped';
+        var dest = path.join(tmpdir, 'grouped');
 
         grunt.helper('consolidatecss', files, dest, null, function() {
             var outCss = path.join(dest, '/file2,file1,subdir$file2.min.css');
@@ -165,6 +197,13 @@ exports['consolidatecss'] = {
 
             test.done();
         });
+    }
+};
+
+exports['consolidatecss_order_mismatch'] = {
+    setUp: function(done) {
+        var dest = path.join(tmpdir, 'order-mismatch');
+        rmdirs(dest, done);
     },
 
     testOrderMismatch: function(test) {
@@ -173,7 +212,7 @@ exports['consolidatecss'] = {
 
         var files = ['test/fixtures/test.html', 'test/fixtures/test-alt.html'];
 
-        var dest = 'tmp/order-mismatch';
+        var dest = path.join(tmpdir, 'order-mismatch');
 
         grunt.helper('consolidatecss', files, dest, {_neverfail:true}, function(err) {
             test.equal(
@@ -182,5 +221,46 @@ exports['consolidatecss'] = {
             test.done();
         });
     }
+};
+
+exports['consolidatecss_one_css'] = {
+    setUp: function(done) {
+        var dest = path.join(tmpdir, 'one-css');
+        rmdirs(dest, done);
+    },
+
+    testOneCSSFile: function(test) {
+
+        test.expect(2);
+
+        var files = ['test/fixtures/test-one-css.html'];
+
+        var dest = path.join(tmpdir, 'one-css');
+
+        grunt.helper('consolidatecss', files, dest, null, function() {
+
+            test.equal(
+                    grunt.file.read(path.join(dest, 'css.min/file1.min.css')),
+                    'body{font-size:20px}');
+
+            test.equal(
+                    grunt.file.read(path.join(dest, '/test-one-css.html')),
+                    '<!doctype html>\n\n    <link rel="stylesheet" type="text/css" href="css.min/file1.min.css">\n\n<div id="test">Hello, world</div>\n');
+
+            test.done();
+        });
+    }
+
+    /*
+
+    TODO: Missing unit tests
+
+    - CSS in sibling dir
+    - CSS in parent dir
+    - HTML in different levels with same CSS groups (Above, below)
+    - Keep intermediates
+
+    */
+
 
 };

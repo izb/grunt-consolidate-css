@@ -174,6 +174,10 @@ module.exports = function(grunt) {
             options.cssdir = options.min ? 'css.min' : 'css';
         }
 
+        if (options.intermediates === undefined) {
+            options.intermediates = false;
+        }
+
         try {
             fs.mkdirSync(path.resolve(destPath));
         } catch(e) {
@@ -188,7 +192,7 @@ module.exports = function(grunt) {
         var fail = function(msg, cb) {
             if(options._neverfail) {
                 /* Testing a unit test plugin with its own unit test app is tricky, because
-                 * you can't test that the unit test framework failed a test, because
+                 * you can't test that the unit test framework correctly failed a test, because
                  * it fails the test checking that the test was failed. Hmm.
                  * Anyway, that's why we have a backdoor flag for unit tests, passing
                  * failure messages back to the callback. */
