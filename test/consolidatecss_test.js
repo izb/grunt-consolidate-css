@@ -46,7 +46,6 @@ function rmdirs(dir, cb){
     });
 }
 
-
 exports['consolidatecss_simple'] = {
 
     setUp: function(done) {
@@ -62,7 +61,7 @@ exports['consolidatecss_simple'] = {
 
         var files = ['test.html'];
 
-        grunt.helper('consolidatecss', files, dest, {basedir:'test/fixtures'}, function() {
+        grunt.helper('consolidatecss', files, dest, {basedir:'test/fixtures',intermediates:false}, function() {
 
             test.equal(
                     grunt.file.read(path.join(dest, 'css.min/file2,file1,subdir$file2.min.css')),
@@ -91,7 +90,7 @@ exports['consolidatecss_sass'] = {
 
         var dest = path.join(tmpdir, 'sass-scss');
 
-        grunt.helper('consolidatecss', files, dest, {basedir:'test/fixtures'}, function() {
+        grunt.helper('consolidatecss', files, dest, {basedir:'test/fixtures', intermediates:false}, function() {
 
             test.equal(
                     grunt.file.read(path.join(dest, 'css.min/file1,file2,file3.min.css')),
@@ -285,10 +284,10 @@ exports['consolidatecss_siblingdir'] = {
 
 TODO: Missing unit tests
 
-- CSS in sibling dir
 - CSS in parent dir
 - HTML in different levels with same CSS groups (Above, below)
-- Keep intermediates
+- Test ALL the fail()s
+- No subdirs
 
 */
 

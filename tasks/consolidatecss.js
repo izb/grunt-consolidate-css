@@ -11,6 +11,51 @@ module.exports = function(grunt) {
     var fs = require('fs');
     var exec = require('child_process').exec;
 
+    var _this = this;
+
+    this.rmdirs = function(dir, cb){
+        path.exists(dir, function(exists) {
+            if (exists) {
+                fs.readdir(dir, function(err, files){
+                    if (err) {
+                        return cb(err);
+                    }
+
+                    var rmFile = function(err) {
+
+                        if (err) {
+                            return cb(err);
+                        }
+
+                        var filename = files.shift();
+
+                        if (filename === null || typeof filename === 'undefined') {
+                            return fs.rmdir(dir, cb);
+                        }
+
+                        var file = dir+'/'+filename;
+                        fs.stat(file, function(err, stat){
+                            if (err) {
+                                return cb(err);
+                            }
+
+                            if (stat.isDirectory()) {
+                                _this.rmdirs(file, rmFile);
+                            } else {
+                                fs.unlink(file, rmFile);
+                            }
+                        });
+                    };
+
+                    rmFile();
+                });
+            } else {
+                cb();
+            }
+        });
+    };
+
+
     var Batch = function(options, subdir, files, mergedName) {
 
         this.batch = files.slice(0);
@@ -36,23 +81,31 @@ module.exports = function(grunt) {
             return _this.batch.length;
         };
 
-        this.concatenate = function(destPath) {
+        this.concatenate = function(destPath, killfiles) {
             var joined = grunt.helper('concat', _this.batch);
             var outfile = path.join(destPath, _this.mergedName + '.css');
             grunt.file.write(outfile, joined);
             _this.batch = [outfile];
-        };
-
-        this.copyBatchTo = function(outdir) {
-            for (var i = 0; i < _this.batch.length; i++) {
-                var name = _this.batch[i];
-                var out = path.join(outdir, name);
-                grunt.file.copy(path.join(_this.options.basedir, name), out);
-                _this.batch[i] = out;
+            if (options.min) {
+                killfiles.push(outfile);
             }
         };
 
-        this.convert = function(fail, destPath, idx, cb) {
+        this.copyBatchTo = function(outdir, killfiles) {
+            for (var i = 0; i < _this.batch.length; i++) {
+                var name = _this.batch[i];
+                var out = path.join(outdir, name);
+                var tmpdir = path.dirname(out.substr((path.join(outdir, '/')).length));
+                grunt.file.copy(path.join(_this.options.basedir, name), out);
+                _this.batch[i] = out;
+                killfiles.push(out);
+                if (tmpdir !== '.') {
+                    killfiles.push(path.dirname(out));
+                }
+            }
+        };
+
+        this.convert = function(fail, killfiles, destPath, idx, cb) {
             var infile = path.resolve(_this.batch[idx]);
             var outfile = "";
 
@@ -76,6 +129,7 @@ module.exports = function(grunt) {
                     fail("scss converter failed with file "+infile+"with error " + err, cb);
                     return;
                 }
+                killfiles.push(outfile);
                 _this.batch[idx] = outfile;
                 grunt.log.write(stdout);
                 grunt.log.write(stderr);
@@ -336,6 +390,10 @@ module.exports = function(grunt) {
             } /* for [html in input] */
 
             var outdir = path.join(destPath, options.cssdir);
+            if (path.normalize(outdir).indexOf(options.basedir) === 0) {
+                fail("An output directory cannot be a subdirectory of the output directory ("+outdir+")");
+                return;
+            }
 
             var processBatches = function(batches, terminate) {
 
@@ -361,13 +419,13 @@ module.exports = function(grunt) {
                         }
                     } else {
                         /* Batch has several pure CSS files. Concatenate them */
-                        batch.concatenate(outdir);
+                        batch.concatenate(outdir, killfiles);
                         /* Feed it back in to minify */
                         processBatches(batches, terminate);
                     }
                     /* Batch is all CSS. Concatenate them */
                 } else {
-                    batch.convert(fail, destPath, idx, function() {
+                    batch.convert(fail, killfiles, destPath, idx, function() {
                         /* Feed it back in to get the next one */
                         processBatches(batches, terminate);
                     });
@@ -375,13 +433,48 @@ module.exports = function(grunt) {
             };
 
             batches.forEach(function(batch) {
-                batch.copyBatchTo(outdir);
+                batch.copyBatchTo(outdir, killfiles);
             });
 
+            var cleanup = function() {
+                if (options.intermediates) {
+                    callback();
+                } else {
+                    if (killfiles.length>0) {
+                        path.exists(killfiles[0], function(exists) {
+                            if (exists) {
+                                fs.stat(killfiles[0], function(err, stat){
+                                    if (err) {
+                                        callback();
+                                    }
+
+                                    if (stat.isDirectory()) {
+                                        _this.rmdirs(killfiles[0], function() {
+                                            killfiles = killfiles.slice(1);
+                                            cleanup();
+                                        });
+                                    } else {
+                                        fs.unlink(killfiles[0], function() {
+                                            killfiles = killfiles.slice(1);
+                                            cleanup();
+                                        });
+                                    }
+                                });
+                            } else {
+                                killfiles = killfiles.slice(1);
+                                cleanup();
+                            }
+                        });
+                    } else {
+                        callback();
+                    }
+                }
+            };
+
             if (batches.length > 0) {
-                processBatches(batches, callback);
+                processBatches(batches, cleanup);
             } else {
-                callback();
+                cleanup();
             }
 
         } catch (e) {
