@@ -280,14 +280,101 @@ exports['consolidatecss_siblingdir'] = {
     }
 };
 
+exports['consolidatecss_nosubdirs'] = {
+    setUp: function(done) {
+        var dest = path.join(tmpdir, 'no-subdirs');
+        rmdirs(dest, done);
+    },
+
+    testNoSubdirs: function(test) {
+
+        test.expect(2);
+
+        var files = ['test-no-subdirs.html'];
+
+        var dest = path.join(tmpdir, 'no-subdirs');
+
+        grunt.helper('consolidatecss', files, dest, {basedir:'test/fixtures'}, function() {
+
+            test.equal(
+                    grunt.file.read(path.join(dest, 'css.min/file1,file2.min.css')),
+                    'body{font-size:20px}h1{height:34px;line-height:19px}');
+
+            test.equal(
+                    grunt.file.read(path.join(dest, 'test-no-subdirs.html')),
+                    '<!doctype html>\n\n    <link rel="stylesheet" type="text/css" href="css.min/file1,file2.min.css">\n\n<div id="test">Hello, world</div>\n');
+
+            test.done();
+        });
+    }
+};
+
+exports['consolidatecss_customcssdir'] = {
+    setUp: function(done) {
+        var dest = path.join(tmpdir, 'custom-css-dir');
+        rmdirs(dest, done);
+    },
+
+    testCustomCSSDir: function(test) {
+
+        test.expect(2);
+
+        var files = ['test.html'];
+
+        var dest = path.join(tmpdir, 'custom-css-dir');
+
+        grunt.helper('consolidatecss', files, dest, {basedir:'test/fixtures', cssdir:'styles'}, function() {
+
+            test.equal(
+                    grunt.file.read(path.join(dest, 'styles/file2,file1,subdir$file2.min.css')),
+                    '#test{color:red}body{font-size:20px}div{font-weight:bold}');
+
+            test.equal(
+                    grunt.file.read(path.join(dest, 'test.html')),
+                    '<!doctype html>\n\n    <link rel="stylesheet" type="text/css" href="styles/file2,file1,subdir$file2.min.css">\n\n<div id="test">Hello, world</div>\n');
+
+            test.done();
+        });
+    }
+};
+
+exports['consolidatecss_emptycssdir'] = {
+    setUp: function(done) {
+        var dest = path.join(tmpdir, 'empty-css-dir');
+        rmdirs(dest, done);
+    },
+
+    testEmptyCSSDir: function(test) {
+
+        test.expect(2);
+
+        var files = ['test.html'];
+
+        var dest = path.join(tmpdir, 'empty-css-dir');
+
+        grunt.helper('consolidatecss', files, dest, {basedir:'test/fixtures', cssdir:''}, function() {
+
+            test.equal(
+                    grunt.file.read(path.join(dest, 'file2,file1,subdir$file2.min.css')),
+                    '#test{color:red}body{font-size:20px}div{font-weight:bold}');
+
+            test.equal(
+                    grunt.file.read(path.join(dest, 'test.html')),
+                    '<!doctype html>\n\n    <link rel="stylesheet" type="text/css" href="file2,file1,subdir$file2.min.css">\n\n<div id="test">Hello, world</div>\n');
+
+            test.done();
+        });
+    }
+};
+
 /*
 
 TODO: Missing unit tests
 
-- CSS in parent dir
 - HTML in different levels with same CSS groups (Above, below)
 - Test ALL the fail()s
 - No subdirs
+- Custom css dir - empty
 
 */
 
