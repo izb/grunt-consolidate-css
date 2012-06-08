@@ -107,6 +107,8 @@ layout problem altogether by forcing you to decide on the order explicitely.
 - `cssdir` The subdirectory that sits alongside the processed HTML that will hold the CSS. By default this will either be `css` or `css.min`.
 - `pathPrefix` This is a prefix added to all CSS link URLs, e.g. a domain name. Sometimes it's useful to use absolute URLs on your test environment.
 - `intermediates` By default, the plugin cleans up after itself, deleting all intermediate stages of CSS that are not the final result. Set this to false to keep the unminified and unconsolidated forms of your CSS.
+- `basedir` *Required* The root of your input directories. Used to calculate where the output CSS should be placed.
+- `dest` *Required* Where the processed HTML and CSS should go. Pages will keep their folder structure, CSS will be placed into `cssdir`.
 
 ## Release History
 - 0.2.1 - First version with SCSS/SASS support

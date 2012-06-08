@@ -199,11 +199,10 @@ module.exports = function(grunt) {
 
     grunt.registerMultiTask('consolidatecss', 'Consolidates and minifies your CSS files on a per-page basis', function() {
 
-        var dest = this.file.dest,
-            options = this.data.options;
+        var options = this.data.options;
 
         var allfiles = grunt.file.expandFiles(this.file.src);
-        grunt.helper('consolidatecss', allfiles, dest, options);
+        grunt.helper('consolidatecss', allfiles, options);
 
         if (grunt.task.current.errorCount) {
             return false;
@@ -211,7 +210,7 @@ module.exports = function(grunt) {
     });
 
 
-    grunt.registerHelper('consolidatecss', function(srces, destPath, options, callback) {
+    grunt.registerHelper('consolidatecss', function(srces, options, callback) {
 
         options = options || {};
 
@@ -248,6 +247,11 @@ module.exports = function(grunt) {
         if (options.basedir === undefined) {
             fail("basedir option is required for grunt-consolidate-css plugin", callback);
         }
+
+        if (options.dest === undefined) {
+            fail("dest option is required for grunt-consolidate-css plugin", callback);
+        }
+        var destPath = options.dest;
 
         options.basedir = path.join(options.basedir, "\\");
 
