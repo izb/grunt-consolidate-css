@@ -61,7 +61,7 @@ exports['consolidatecss_simple'] = {
 
         var files = ['test.html'];
 
-        grunt.helper('consolidatecss', files, dest, {basedir:'test/fixtures',intermediates:false}, function() {
+        grunt.helper('consolidatecss', files, {basedir:'test/fixtures',intermediates:false, dest:dest}, function() {
 
             test.equal(
                     grunt.file.read(path.join(dest, 'css.min/file2,file1,subdir$file2.min.css')),
@@ -90,7 +90,7 @@ exports['consolidatecss_sass'] = {
 
         var dest = path.join(tmpdir, 'sass-scss');
 
-        grunt.helper('consolidatecss', files, dest, {basedir:'test/fixtures', intermediates:false}, function() {
+        grunt.helper('consolidatecss', files, {basedir:'test/fixtures', intermediates:false, dest:dest}, function() {
 
             test.equal(
                     grunt.file.read(path.join(dest, 'css.min/file1,file2,file3.min.css')),
@@ -121,7 +121,7 @@ exports['consolidatecss_path_prefix'] = {
 
         var dest = path.join(tmpdir, 'path-prefix');
 
-        grunt.helper('consolidatecss', files, dest, {pathPrefix: "http://example.com/subdir", basedir:'test/fixtures'}, function() {
+        grunt.helper('consolidatecss', files, {pathPrefix: "http://example.com/subdir", basedir:'test/fixtures', dest:dest}, function() {
 
             test.equal(
                     grunt.file.read(path.join(dest, 'css.min/file2,file1,subdir$file2.min.css')),
@@ -151,7 +151,7 @@ exports['consolidatecss_nomin'] = {
 
         var dest = path.join(tmpdir, 'nomin');
 
-        grunt.helper('consolidatecss', files, dest, { min: false, basedir:'test/fixtures' }, function() {
+        grunt.helper('consolidatecss', files, { min: false, basedir:'test/fixtures', dest:dest }, function() {
             test.equal(
                     grunt.file.read(path.join(dest, 'css/file2,file1,subdir$file2.css')),
                     '#test {\r\n    color:red;\r\n}\r\n\r\nbody {\r\n    font-size: 20px;\r\n}\r\n\r\ndiv {\r\n    font-weight:bold;\r\n}\r\n');
@@ -179,7 +179,7 @@ exports['consolidatecss_grouped'] = {
 
         var dest = path.join(tmpdir, 'grouped');
 
-        grunt.helper('consolidatecss', files, dest, {basedir:'test/fixtures'}, function() {
+        grunt.helper('consolidatecss', files, {basedir:'test/fixtures', dest:dest}, function() {
             var outCss = path.join(dest, '/file2,file1,subdir$file2.min.css');
 
             test.equal(
@@ -213,7 +213,7 @@ exports['consolidatecss_order_mismatch'] = {
 
         var dest = path.join(tmpdir, 'order-mismatch');
 
-        grunt.helper('consolidatecss', files, dest, {_neverfail:true, basedir:'test/fixtures'}, function(err) {
+        grunt.helper('consolidatecss', files, {_neverfail:true, basedir:'test/fixtures', dest:dest}, function(err) {
             test.equal(
                     err,
                     'Pages ref same CSS in different orders 1) test/fixtures/test.html 2) test/fixtures/test-alt.html');
@@ -236,7 +236,7 @@ exports['consolidatecss_one_css'] = {
 
         var dest = path.join(tmpdir, 'one-css');
 
-        grunt.helper('consolidatecss', files, dest, {basedir:'test/fixtures'}, function() {
+        grunt.helper('consolidatecss', files, {basedir:'test/fixtures', dest:dest}, function() {
 
             test.equal(
                     grunt.file.read(path.join(dest, 'css.min/file1.min.css')),
@@ -265,7 +265,7 @@ exports['consolidatecss_siblingdir'] = {
 
         var dest = path.join(tmpdir, 'sibling-dir');
 
-        grunt.helper('consolidatecss', files, dest, {basedir:'test/fixtures'}, function() {
+        grunt.helper('consolidatecss', files, {basedir:'test/fixtures', dest:dest}, function() {
 
             test.equal(
                     grunt.file.read(path.join(dest, 'css.min/subdir$file2,file2,file1,subdir$file3.min.css')),
@@ -294,7 +294,7 @@ exports['consolidatecss_nosubdirs'] = {
 
         var dest = path.join(tmpdir, 'no-subdirs');
 
-        grunt.helper('consolidatecss', files, dest, {basedir:'test/fixtures'}, function() {
+        grunt.helper('consolidatecss', files, {basedir:'test/fixtures', dest:dest}, function() {
 
             test.equal(
                     grunt.file.read(path.join(dest, 'css.min/file1,file2.min.css')),
@@ -323,7 +323,7 @@ exports['consolidatecss_customcssdir'] = {
 
         var dest = path.join(tmpdir, 'custom-css-dir');
 
-        grunt.helper('consolidatecss', files, dest, {basedir:'test/fixtures', cssdir:'styles'}, function() {
+        grunt.helper('consolidatecss', files, {basedir:'test/fixtures', cssdir:'styles', dest:dest}, function() {
 
             test.equal(
                     grunt.file.read(path.join(dest, 'styles/file2,file1,subdir$file2.min.css')),
@@ -352,7 +352,7 @@ exports['consolidatecss_emptycssdir'] = {
 
         var dest = path.join(tmpdir, 'empty-css-dir');
 
-        grunt.helper('consolidatecss', files, dest, {basedir:'test/fixtures', cssdir:''}, function() {
+        grunt.helper('consolidatecss', files, {basedir:'test/fixtures', cssdir:'', dest:dest}, function() {
 
             test.equal(
                     grunt.file.read(path.join(dest, 'file2,file1,subdir$file2.min.css')),
@@ -373,9 +373,5 @@ TODO: Missing unit tests
 
 - HTML in different levels with same CSS groups (Above, below)
 - Test ALL the fail()s
-- No subdirs
-- Custom css dir - empty
 
 */
-
-
