@@ -30,7 +30,7 @@ Then add some configuration for the plugin like so:
 
     grunt.initConfig({
         ...
-        consolidateCss: {
+        consolidatecss: {
           app: {
             src: ['path/to/html/files/*.html', 'path/to/html/files/*.php'],
             options: {
@@ -41,7 +41,7 @@ Then add some configuration for the plugin like so:
         ...
     });
 
-Then just run `grunt consolidateCss`.
+Then just run `grunt consolidatecss`.
 
 ### Basic output
 

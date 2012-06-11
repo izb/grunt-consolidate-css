@@ -9,7 +9,7 @@
 module.exports = function(grunt) {
     var path = require('path');
     var fs = require('fs');
-    var exec = require('child_process').exec;
+    var exec = require('child_process').spawn;
 
     var _this = this;
 
@@ -184,7 +184,7 @@ module.exports = function(grunt) {
         return result;
     };
 
-    var cssPathPattern = new RegExp(/href\s*=["'](.*)?["']/);
+    var cssPathPattern = new RegExp(/href\s*=["'](.*?)["']/);
     var relPattern = new RegExp(/rel\s*=\s*["']stylesheet["']/);
     var leadingSpacePattern = new RegExp(/(\s*)./);
 
@@ -213,6 +213,7 @@ module.exports = function(grunt) {
     grunt.registerHelper('consolidatecss', function(srces, options, callback) {
 
         options = options || {};
+        callback = callback || function() {};
 
         var fail = function(msg, cb) {
             if(options._neverfail) {
@@ -287,8 +288,10 @@ module.exports = function(grunt) {
         try {
             for (j = 0; j < srces.length; j++) {
 
-                var src = path.join(options.basedir, srces[j]);
-                src = path.normalize(src);
+                var src = path.normalize(srces[j]);
+                if (src.indexOf(options.basedir)!==0) {
+                    src = path.join(options.basedir, src);
+                }
 
                 if (src.indexOf(options.basedir) !== 0) {
                     /* After normalization, .. parts of the path could bring it out of the basedir */
@@ -482,7 +485,8 @@ module.exports = function(grunt) {
             }
 
         } catch (e) {
-            grunt.log.error("Unable to consolidate CSS", e);
+            grunt.log.writeln(e);
+            grunt.log.error("Unable to consolidate CSS");
         }
     });
 
