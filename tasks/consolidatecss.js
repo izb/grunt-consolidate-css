@@ -9,7 +9,7 @@
 module.exports = function(grunt) {
     var path = require('path');
     var fs = require('fs');
-    var exec = require('child_process').spawn;
+    var exec = require('child_process').exec;
 
     var _this = this;
 
@@ -124,7 +124,7 @@ module.exports = function(grunt) {
                 /* Folder exists. Fine, ignore. */
             }
 
-            exec('scss -C' + syntaxFlag + ' ' + infile + ' > '+outfile, function(err, stdout, stderr) {
+            exec('scss -C' + syntaxFlag + ' ' + infile + ' '+outfile, function(err, stdout, stderr) {
                 if (err) {
                     fail("scss converter failed with file "+infile+"with error " + err, cb);
                     return;
