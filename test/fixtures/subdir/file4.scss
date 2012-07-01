@@ -1,0 +1,13 @@
+@import 'myimport.scss';
+
+#navbar {
+  width: 80%;
+  height: 23px;
+  background-color: $col_bg;
+
+  ul { list-style-type: none; }
+  li {
+    float: left;
+    a { font-weight: bold; }
+  }
+}

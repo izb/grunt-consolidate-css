@@ -14,7 +14,7 @@ module.exports = function(grunt) {
     var _this = this;
 
     this.rmdirs = function(dir, cb){
-        path.exists(dir, function(exists) {
+        fs.exists(dir, function(exists) {
             if (exists) {
                 fs.readdir(dir, function(err, files){
                     if (err) {
@@ -91,13 +91,56 @@ module.exports = function(grunt) {
             }
         };
 
-        this.copyBatchTo = function(outdir, killfiles) {
-            for (var i = 0; i < _this.batch.length; i++) {
-                var name = _this.batch[i];
+        this.copyBatchTo = function(outdir, killfiles, fail) {
+            var name;
+            var sassDir;
+            var extBatch = _this.batch.slice(0);
+
+            var scssProcess = function(utf8) {
+                var content = utf8.replace(/\r/g, '');
+                content = content.split('\n');
+                for (var i = 0; i < content.length; i++) {
+                    var line = content[i].trim();
+                    if (line.indexOf('@import') === 0) {
+                        var val = line.substr(7).trim();
+                        if (val.lastIndexOf(';') !== val.length-1) {
+                            fail('@import statements must be on one line ('+name+')');
+                            return;
+                        }
+                        val = val.substr(0, val.length-1);
+                        if (val.substr(0,1)!==val.substr(val.length-1,1)) {
+                            fail('@import format unsupported by CSS consolidator in '+name+"; "+line);
+                            return;
+                        }
+                        val = val.substr(1, val.length-2);
+                        if (val.indexOf('\'')>=0 || val.indexOf('"')>=0) {
+                            fail('@import format unsupported by CSS consolidator in '+name+"; "+line);
+                            return;
+                        }
+                        extBatch.push(path.join(sassDir, val));
+                    }
+                }
+                return utf8;
+            };
+
+            for (var i = 0; i < extBatch.length; i++) {
+                name = extBatch[i];
                 var out = path.join(outdir, name);
                 var tmpdir = path.dirname(out.substr((path.join(outdir, '/')).length));
-                grunt.file.copy(path.join(_this.options.basedir, name), out);
-                _this.batch[i] = out;
+
+                var options;
+                if(name.substr(-5)===".scss") {
+                    sassDir = path.dirname(name);
+                    options = { process: scssProcess };
+                } else {
+                    options = undefined;
+                }
+                /* TODO: SASS process too */
+                grunt.file.copy(path.join(_this.options.basedir, name), out, options);
+                if (i < _this.batch.length) {
+                    _this.batch[i] = out;
+                }
+
                 killfiles.push(out);
                 if (tmpdir !== '.') {
                     killfiles.push(path.dirname(out));
@@ -116,7 +159,9 @@ module.exports = function(grunt) {
             } else {
                 outfile = path.basename(infile, '.scss') + '.css';
             }
-            outfile = path.join(path.dirname(infile), outfile);
+
+            var indir = path.dirname(infile);
+            outfile = path.join(indir, outfile);
 
             try {
                 fs.mkdirSync(path.resolve(destPath));
@@ -124,17 +169,22 @@ module.exports = function(grunt) {
                 /* Folder exists. Fine, ignore. */
             }
 
-            exec('scss -C' + syntaxFlag + ' ' + infile + ' '+outfile, function(err, stdout, stderr) {
-                if (err) {
-                    fail("scss converter failed with file "+infile+"with error " + err, cb);
-                    return;
-                }
-                killfiles.push(outfile);
-                _this.batch[idx] = outfile;
-                grunt.log.write(stdout);
-                grunt.log.write(stderr);
-                cb();
-            });
+            exec('scss -C' + syntaxFlag + ' ' + infile + ' '+outfile,
+                {
+                    cwd: indir
+                },
+                function(err, stdout, stderr) {
+                    grunt.log.write(stdout);
+                    grunt.log.write(stderr);
+                    if (err) {
+                        fail("scss converter failed with file "+infile+"with error " + err, cb);
+                        return;
+                    }
+                    killfiles.push(outfile);
+                    _this.batch[idx] = outfile;
+                    cb();
+                });
+
         };
 
         this.minify = function(fail, destPath, yuijarpath, idx, cb) {
@@ -142,7 +192,6 @@ module.exports = function(grunt) {
             var infile = path.resolve(filename);
             var outfile = path.basename(filename, '.css') + '.min.css';
             outfile = path.join(destPath, outfile);
-
             exec('java -jar "' + yuijarpath + '" --charset utf-8 --preserve-semi --line-break 150 -o "' + outfile + '" "' + infile, function(err, stdout, stderr) {
                 if (err) {
                     fail("YUICompressor failed with error " + err, cb);
@@ -200,9 +249,8 @@ module.exports = function(grunt) {
     grunt.registerMultiTask('consolidatecss', 'Consolidates and minifies your CSS files on a per-page basis', function() {
 
         var options = this.data.options;
-
         var allfiles = grunt.file.expandFiles(this.file.src);
-        grunt.helper('consolidatecss', allfiles, options);
+        grunt.helper('consolidatecss', allfiles, options, this.async());
 
         if (grunt.task.current.errorCount) {
             return false;
@@ -417,6 +465,7 @@ module.exports = function(grunt) {
                     if (batch.count() === 1) {
                         if (options.min && !batch.firstIsMinified()) {
                             /* One single CSS. minify it. */
+                            batch.concatenate(outdir, killfiles);/* Looks weird, concatenative 1 file, but it also renames the file if it's in a subdir */
                             batch.minify(fail, outdir, options.yuijarpath, 0, function() {
                                 /* This batch is done */
                                 processBatches(batches.slice(1), terminate);
@@ -440,7 +489,7 @@ module.exports = function(grunt) {
             };
 
             batches.forEach(function(batch) {
-                batch.copyBatchTo(outdir, killfiles);
+                batch.copyBatchTo(outdir, killfiles, fail);
             });
 
             var cleanup = function() {
@@ -448,7 +497,7 @@ module.exports = function(grunt) {
                     callback();
                 } else {
                     if (killfiles.length>0) {
-                        path.exists(killfiles[0], function(exists) {
+                        fs.exists(killfiles[0], function(exists) {
                             if (exists) {
                                 fs.stat(killfiles[0], function(err, stat){
                                     if (err) {

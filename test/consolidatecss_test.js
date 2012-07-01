@@ -63,13 +63,15 @@ exports['consolidatecss_simple'] = {
 
         grunt.helper('consolidatecss', files, {basedir:'test/fixtures',intermediates:false, dest:dest}, function() {
 
+            var cssname = 'css.min/file2,file1,subdir$file2.min.css';
+
             test.equal(
-                    grunt.file.read(path.join(dest, 'css.min/file2,file1,subdir$file2.min.css')),
+                    grunt.file.read(path.join(dest, cssname)),
                     '#test{color:red}body{font-size:20px}div{font-weight:bold}');
 
             test.equal(
                     grunt.file.read(path.join(dest, '/test.html')),
-                    '<!doctype html>\n\n    <link rel="stylesheet" type="text/css" href="css.min/file2,file1,subdir$file2.min.css">\n\n<div id="test">Hello, world</div>\n');
+                    '<!doctype html>\n\n    <link rel="stylesheet" type="text/css" href="'+cssname+'">\n\n<div id="test">Hello, world</div>\n');
 
             test.done();
         });
@@ -92,19 +94,20 @@ exports['consolidatecss_sass'] = {
 
         grunt.helper('consolidatecss', files, {basedir:'test/fixtures', intermediates:false, dest:dest}, function() {
 
+            var cssname = 'css.min/file1,file2,file3.min.css';
+
             test.equal(
-                    grunt.file.read(path.join(dest, 'css.min/file1,file2,file3.min.css')),
+                    grunt.file.read(path.join(dest, cssname)),
                     'body{font-size:20px}h1{height:34px;line-height:19px}#navbar{width:80%;height:23px}#navbar ul{list-style-type:none}#navbar li{float:left}#navbar li a{font-weight:bold}');
 
             test.equal(
                     grunt.file.read(path.join(dest, '/test-sass-scss.html')),
-                    '<!doctype html>\n\n    <link rel="stylesheet" type="text/css" href="css.min/file1,file2,file3.min.css">\n\n<div id="test">Hello, world</div>\n');
+                    '<!doctype html>\n\n    <link rel="stylesheet" type="text/css" href="'+cssname+'">\n\n<div id="test">Hello, world</div>\n');
 
             test.done();
         });
     }
 };
-
 
 exports['consolidatecss_path_prefix'] = {
     setUp: function(done) {
@@ -123,19 +126,20 @@ exports['consolidatecss_path_prefix'] = {
 
         grunt.helper('consolidatecss', files, {pathPrefix: "http://example.com/subdir", basedir:'test/fixtures', dest:dest}, function() {
 
+            var cssname = 'css.min/file2,file1,subdir$file2.min.css';
+
             test.equal(
-                    grunt.file.read(path.join(dest, 'css.min/file2,file1,subdir$file2.min.css')),
+                    grunt.file.read(path.join(dest, cssname)),
                     '#test{color:red}body{font-size:20px}div{font-weight:bold}');
 
             test.equal(
                     grunt.file.read(path.join(dest, '/test.html')),
-                    '<!doctype html>\n\n    <link rel="stylesheet" type="text/css" href="http://example.com/subdir/css.min/file2,file1,subdir$file2.min.css">\n\n<div id="test">Hello, world</div>\n');
+                    '<!doctype html>\n\n    <link rel="stylesheet" type="text/css" href="http://example.com/subdir/'+cssname+'">\n\n<div id="test">Hello, world</div>\n');
 
             test.done();
         });
     }
 };
-
 
 exports['consolidatecss_nomin'] = {
     setUp: function(done) {
@@ -152,13 +156,16 @@ exports['consolidatecss_nomin'] = {
         var dest = path.join(tmpdir, 'nomin');
 
         grunt.helper('consolidatecss', files, { min: false, basedir:'test/fixtures', dest:dest }, function() {
+
+            var cssname = 'css/file2,file1,subdir$file2.css';
+
             test.equal(
-                    grunt.file.read(path.join(dest, 'css/file2,file1,subdir$file2.css')),
+                    grunt.file.read(path.join(dest, cssname)),
                     '#test {\r\n    color:red;\r\n}\r\n\r\nbody {\r\n    font-size: 20px;\r\n}\r\n\r\ndiv {\r\n    font-weight:bold;\r\n}\r\n');
 
             test.equal(
                     grunt.file.read(path.join(dest, '/test.html')),
-                    '<!doctype html>\n\n    <link rel="stylesheet" type="text/css" href="css/file2,file1,subdir$file2.css">\n\n<div id="test">Hello, world</div>\n');
+                    '<!doctype html>\n\n    <link rel="stylesheet" type="text/css" href="'+cssname+'">\n\n<div id="test">Hello, world</div>\n');
 
             test.done();
         });
@@ -182,17 +189,20 @@ exports['consolidatecss_grouped'] = {
         grunt.helper('consolidatecss', files, {basedir:'test/fixtures', dest:dest}, function() {
             var outCss = path.join(dest, '/file2,file1,subdir$file2.min.css');
 
+            var cssname1 = 'css.min/file2,file1.min.css';
+            var cssname2 = 'css.min/subdir$file2,subdir$file3.min.css';
+
             test.equal(
-                    grunt.file.read(path.join(dest, 'css.min/file2,file1.min.css')),
+                    grunt.file.read(path.join(dest, cssname1)),
                     '#test{color:red}body{font-size:20px}');
 
             test.equal(
-                    grunt.file.read(path.join(dest, 'css.min/subdir$file2,subdir$file3.min.css')),
+                    grunt.file.read(path.join(dest, cssname2)),
                     'div{font-weight:bold}.fineprint{font-size:5px}');
 
             test.equal(
                     grunt.file.read(path.join(dest, '/grouped.html')),
-                    '<!doctype html>\n\n    <link rel="stylesheet" type="text/css" href="css.min/file2,file1.min.css">\n\n    <link rel="stylesheet" type="text/css" href="css.min/subdir$file2,subdir$file3.min.css">\n\n<div id="test">Hello, world</div>\n');
+                    '<!doctype html>\n\n    <link rel="stylesheet" type="text/css" href="'+cssname1+'">\n\n    <link rel="stylesheet" type="text/css" href="'+cssname2+'">\n\n<div id="test">Hello, world</div>\n');
 
             test.done();
         });
@@ -238,13 +248,15 @@ exports['consolidatecss_one_css'] = {
 
         grunt.helper('consolidatecss', files, {basedir:'test/fixtures', dest:dest}, function() {
 
+            var cssname = 'css.min/file1.min.css';
+
             test.equal(
-                    grunt.file.read(path.join(dest, 'css.min/file1.min.css')),
+                    grunt.file.read(path.join(dest, cssname)),
                     'body{font-size:20px}');
 
             test.equal(
                     grunt.file.read(path.join(dest, '/test-one-css.html')),
-                    '<!doctype html>\n\n    <link rel="stylesheet" type="text/css" href="css.min/file1.min.css">\n\n<div id="test">Hello, world</div>\n');
+                    '<!doctype html>\n\n    <link rel="stylesheet" type="text/css" href="'+cssname+'">\n\n<div id="test">Hello, world</div>\n');
 
             test.done();
         });
@@ -267,13 +279,15 @@ exports['consolidatecss_siblingdir'] = {
 
         grunt.helper('consolidatecss', files, {basedir:'test/fixtures', dest:dest}, function() {
 
+            var cssname = 'css.min/subdir$file2,file2,file1,subdir$file3.min.css';
+
             test.equal(
-                    grunt.file.read(path.join(dest, 'css.min/subdir$file2,file2,file1,subdir$file3.min.css')),
+                    grunt.file.read(path.join(dest, cssname)),
                     'div{font-weight:bold}#test{color:red}body{font-size:20px}.fineprint{font-size:5px}');
 
             test.equal(
                     grunt.file.read(path.join(dest, '/pages/sibling.html')),
-                    '<!doctype html>\n\n    <link rel="stylesheet" type="text/css" href="../css.min/subdir$file2,file2,file1,subdir$file3.min.css">\n\n<div id="test">Hello, world</div>\n');
+                    '<!doctype html>\n\n    <link rel="stylesheet" type="text/css" href="../'+cssname+'">\n\n<div id="test">Hello, world</div>\n');
 
             test.done();
         });
@@ -296,13 +310,15 @@ exports['consolidatecss_nosubdirs'] = {
 
         grunt.helper('consolidatecss', files, {basedir:'test/fixtures', dest:dest}, function() {
 
+            var cssname = 'css.min/file1,file2.min.css';
+
             test.equal(
-                    grunt.file.read(path.join(dest, 'css.min/file1,file2.min.css')),
+                    grunt.file.read(path.join(dest, cssname)),
                     'body{font-size:20px}h1{height:34px;line-height:19px}');
 
             test.equal(
                     grunt.file.read(path.join(dest, 'test-no-subdirs.html')),
-                    '<!doctype html>\n\n    <link rel="stylesheet" type="text/css" href="css.min/file1,file2.min.css">\n\n<div id="test">Hello, world</div>\n');
+                    '<!doctype html>\n\n    <link rel="stylesheet" type="text/css" href="'+cssname+'">\n\n<div id="test">Hello, world</div>\n');
 
             test.done();
         });
@@ -325,13 +341,15 @@ exports['consolidatecss_customcssdir'] = {
 
         grunt.helper('consolidatecss', files, {basedir:'test/fixtures', cssdir:'styles', dest:dest}, function() {
 
+            var cssname = 'styles/file2,file1,subdir$file2.min.css';
+
             test.equal(
-                    grunt.file.read(path.join(dest, 'styles/file2,file1,subdir$file2.min.css')),
+                    grunt.file.read(path.join(dest, cssname)),
                     '#test{color:red}body{font-size:20px}div{font-weight:bold}');
 
             test.equal(
                     grunt.file.read(path.join(dest, 'test.html')),
-                    '<!doctype html>\n\n    <link rel="stylesheet" type="text/css" href="styles/file2,file1,subdir$file2.min.css">\n\n<div id="test">Hello, world</div>\n');
+                    '<!doctype html>\n\n    <link rel="stylesheet" type="text/css" href="'+cssname+'">\n\n<div id="test">Hello, world</div>\n');
 
             test.done();
         });
@@ -354,13 +372,46 @@ exports['consolidatecss_emptycssdir'] = {
 
         grunt.helper('consolidatecss', files, {basedir:'test/fixtures', cssdir:'', dest:dest}, function() {
 
+            var cssname = 'file2,file1,subdir$file2.min.css';
+
             test.equal(
-                    grunt.file.read(path.join(dest, 'file2,file1,subdir$file2.min.css')),
+                    grunt.file.read(path.join(dest, cssname)),
                     '#test{color:red}body{font-size:20px}div{font-weight:bold}');
 
             test.equal(
                     grunt.file.read(path.join(dest, 'test.html')),
-                    '<!doctype html>\n\n    <link rel="stylesheet" type="text/css" href="file2,file1,subdir$file2.min.css">\n\n<div id="test">Hello, world</div>\n');
+                    '<!doctype html>\n\n    <link rel="stylesheet" type="text/css" href="'+cssname+'">\n\n<div id="test">Hello, world</div>\n');
+
+            test.done();
+        });
+    }
+};
+
+exports['consolidatecss_sassimport'] = {
+    setUp: function(done) {
+        var dest = path.join(tmpdir, 'sassimport');
+        rmdirs(dest, done);
+    },
+
+    testSASSImport: function(test) {
+
+        test.expect(2);
+
+        var files = ['test-sass-import.html'];
+
+        var dest = path.join(tmpdir, 'sassimport');
+
+        grunt.helper('consolidatecss', files, {basedir:'test/fixtures', cssdir:'', dest:dest }, function() {
+
+            var cssname = 'subdir$file4.min.css';
+
+            test.equal(
+                    grunt.file.read(path.join(dest, cssname)),
+                    '#navbar{width:80%;height:23px;background-color:#78b}#navbar ul{list-style-type:none}#navbar li{float:left}#navbar li a{font-weight:bold}');
+
+            test.equal(
+                    grunt.file.read(path.join(dest, 'test-sass-import.html')),
+                    '<!doctype html>\n\n    <link rel="stylesheet" type="text/css" href="'+cssname+'">\n\n<div id="test">Hello, world</div>\n');
 
             test.done();
         });

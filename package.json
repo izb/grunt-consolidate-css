@@ -1,7 +1,7 @@
 {
     "name": "grunt-consolidate-css",
     "description": "Consolidates, converts and minifies your CSS, SASS, and SCSS files directed purely by your HTML",
-    "version": "0.4.1",
+    "version": "0.4.2",
     "homepage": "https://github.com/izb/grunt-consolidate-css",
     "author": {
         "name": "Ian Beveridge",
@@ -17,16 +17,16 @@
     },
     "main": "grunt.js",
     "engines": {
-        "node": "*"
+        "node": ">=0.8.1"
     },
     "scripts": {
         "test": "grunt test"
     },
     "dependencies": {
-        "grunt": "~0.3.9"
+        "grunt": "~0.3.11"
     },
     "devDependencies": {
-        "grunt": "~0.3.9"
+        "grunt": "~0.3.11"
     },
     "keywords": ["gruntplugin"]
 }
