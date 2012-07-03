@@ -1,6 +1,6 @@
 # grunt-consolidate-css
 
-Consolidates and minifies your CSS files on a per-page basis
+Consolidates and minifies your CSS/SCSS/SASS files on a per-page basis
 
 ## Getting Started, Getting Help
 - [Grunt repo](https://github.com/cowboy/grunt)
