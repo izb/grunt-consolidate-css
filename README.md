@@ -111,5 +111,6 @@ layout problem altogether by forcing you to decide on the order explicitely.
 - `dest` *Required* Where the processed HTML and CSS should go. Pages will keep their folder structure, CSS will be placed into `cssdir`.
 
 ## Release History
+- 0.4.2 - First version proven in the field. First version that feels stable.
 - 0.2.1 - First version with SCSS/SASS support
 - 0.1.2 - First working version.
