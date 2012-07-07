@@ -5,7 +5,7 @@ var grunt = require('grunt'),
 var tmpdir = 'tmp';
 
 function rmdirs(dir, cb){
-    path.exists(dir, function(exists) {
+    fs.exists(dir, function(exists) {
         if (exists) {
             fs.readdir(dir, function(err, files){
                 if (err) {
