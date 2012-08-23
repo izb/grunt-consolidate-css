@@ -1,3 +1,4 @@
+[![build status](https://secure.travis-ci.org/izb/grunt-consolidate-css.png)](http://travis-ci.org/izb/grunt-consolidate-css)
 # grunt-consolidate-css
 
 Consolidates and minifies your CSS/SCSS/SASS files on a per-page basis
