@@ -3,6 +3,12 @@
 
 Consolidates and minifies your CSS/SCSS/SASS files on a per-page basis
 
+## A note on Grunt 0.4
+
+This is an old plugin. Old plugins should be updated to grunt 0.4, but this one
+will not. There are much better ways to be handling your CSS files. I recommend
+you look into Compass, which does a far, far better job of things.
+
 ## Getting Started, Getting Help
 - [Grunt repo](https://github.com/cowboy/grunt)
 - [Getting started with grunt](https://github.com/cowboy/grunt/blob/master/docs/getting_started.md)
